@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using UniverseCreation.API.Adapter.Out.Repository;
 using UniverseCreation.API.DataStore.ModelDto;
 using UniverseCreation.API.DataStore;
+using UniverseCreation.API.Application.Domain.Model;
 
 namespace UniverseCreation.API.Adapter.In.Controllers
 {
@@ -11,31 +12,39 @@ namespace UniverseCreation.API.Adapter.In.Controllers
     public class CharactersController : ControllerBase
     {
         private readonly ILogger<CharactersController> _logger;
-        private readonly ICharacterRepository _characterRepository;
+        private readonly ICharacterRepositoryGraph _characterRepositoryGraph;
+        private readonly IFamilyTreeRepositoryGraph _familyTreeRepositoryGraph;
 
-        public CharactersController(ILogger<CharactersController> logger, ICharacterRepository characterRepository)
+        public CharactersController(ILogger<CharactersController> logger, ICharacterRepositoryGraph characterRepository, IFamilyTreeRepositoryGraph familyTreeRepositoryGraph)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _characterRepository = characterRepository;
+            _characterRepositoryGraph = characterRepository;
+            _familyTreeRepositoryGraph = familyTreeRepositoryGraph;
         }
 
-        /*
+        
         [HttpGet("{characterName}")]
-        public async Task<IActionResult> SearchCharacterByName(string universeName, string characterName)
+        public async Task<IActionResult> SearchCharacterByName(string universe, string characterName)
         {
             try
             {
-                var characters = await _characterRepository.SearchCharacterBythename(universeName, characterName);
+                var characters = await _characterRepositoryGraph.SearchCharacterBythename(universe, characterName);
+
+                /*if (characters == null)
+                {
+                    characters = await _characterRepositoryGraph.
+                }*/
+
                 return Ok(characters);
             }
             catch (Exception ex)
             {
-                _logger.LogCritical($"Exception while getting characters for universe with the name : {universeName}.",
+                _logger.LogCritical($"Exception while getting characters for universe with the name : {universe}.",
                     ex);
                 return StatusCode(500,
                     "A problem happened while handling your request.");
             }
-        }*/
+        }
 
         
         [HttpGet()]
@@ -43,7 +52,7 @@ namespace UniverseCreation.API.Adapter.In.Controllers
         {
             try
             {
-                var characters = await _characterRepository.MatchAllCharactersByUniverseName(universe);
+                var characters = await _characterRepositoryGraph.MatchAllCharactersByUniverseName(universe);
                 return Ok(characters);
             }
             catch (Exception ex)
@@ -56,18 +65,82 @@ namespace UniverseCreation.API.Adapter.In.Controllers
             
         }
 
-        /*
-        [HttpGet()]
-        public async Task<IActionResult> GetAllCharactersAndRelative(string universeName)
+
+        [HttpGet("/api/families_trees/{family_treeName}/characters")]
+        public async Task<IActionResult> GetAllCharactersFromFamilyTreeName(string family_treeName)
         {
             try
             {
-                var charactersAndRelative = await _characterRepository.MatchAllCharactersWithHisRelative(universeName);
+                // check if the family tree exist
+                var familyTreeFinded = await _familyTreeRepositoryGraph.FindFamilyTree(family_treeName);
+                if (familyTreeFinded == null)
+                {
+                    _logger.LogInformation($"Family Tree with the name {family_treeName} was'nt found when accessing characters.");
+                    return NotFound();
+                }
+
+
+                var characters = await _characterRepositoryGraph.MatchAllCharactersFromFamilyTree(family_treeName);
+                return Ok(characters);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical($"Exception while getting characters for the family name name : {family_treeName}.",
+                    ex);
+                return StatusCode(500,
+                    "A problem happened while handling your request.");
+            }
+
+        }
+
+
+        [HttpPost("/api/families_trees/{family_treeName}/characters")]
+        public async Task<IActionResult> AddCharacterInFamilyTreeName([FromBody] RelationForCreationDto relationForCreationDto)
+        {
+            try
+            {
+                // check if the family tree exist
+                var familyTreeFinded = await _familyTreeRepositoryGraph.FindFamilyTree(relationForCreationDto.EndPoint);
+                if (familyTreeFinded == null)
+                {
+                    _logger.LogInformation($"Family Tree with the name {relationForCreationDto.EndPoint} was'nt found when adding character in family tree.");
+                    return NotFound();
+                }
+
+                // check if the character exist
+                var characterFinded = await _characterRepositoryGraph.FindCharacter(relationForCreationDto.StratPoint);
+                if (characterFinded == null)
+                {
+                    _logger.LogInformation($"Character with the name {relationForCreationDto.StratPoint} was'nt found when adding character in familyTree.");
+                    return NotFound();
+                }
+
+
+                await _characterRepositoryGraph.AddCharacterToFamilyTree(relationForCreationDto.EndPoint, relationForCreationDto.StratPoint);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical($"Exception while adding characters for the family name name : {relationForCreationDto.StratPoint}.",
+                    ex);
+                return StatusCode(500,
+                    "A problem happened while handling your request.");
+            }
+
+        }
+
+
+        /*[HttpGet("relative")]
+        public async Task<IActionResult> GetAllCharactersAndRelative(string universe)
+        {
+            try
+            {
+                var charactersAndRelative = await _characterRepository.MatchAllCharactersWithHisRelative(universe);
                 return Ok(charactersAndRelative);
             }
             catch (Exception ex)
             {
-                _logger.LogCritical($"Exception while getting characters for universe with the name : {universeName}.",
+                _logger.LogCritical($"Exception while getting characters for universe with the name : {universe}.",
                     ex);
                 return StatusCode(500,
                     "A problem happened while handling your request.");
@@ -106,14 +179,15 @@ namespace UniverseCreation.API.Adapter.In.Controllers
         }
         
         [HttpGet("details/{characterId}", Name = "GetCharacters")]
-        public ActionResult<CharacterDto> GetCharacter(int universeId, int characterId)
+        public ActionResult<CharacterDto> GetCharacter(int universe, int characterId)
         {
+            int universeId = universe;
             try
             {
                 // find universe
-                var universe = UniversesDataStores.Current.Universes.FirstOrDefault(c => c.Id == universeId);
+                var universeFind = UniversesDataStores.Current.Universes.FirstOrDefault(c => c.Id == universeId);
 
-                if (universe == null)
+                if (universeFind == null)
                 {
                     _logger.LogInformation($"Universe with id {universeId} was'nt found when accessing characters.");
                     return NotFound();
@@ -141,14 +215,15 @@ namespace UniverseCreation.API.Adapter.In.Controllers
         }
 
         [HttpPost("details")]
-        public ActionResult<CharacterDto> CreationCharacter(int universeId, [FromBody] CharacterForCreationDto character)
+        public ActionResult<CharacterDto> CreationCharacter(int universe, [FromBody] CharacterForCreationDto character)
         {
+            int universeId = universe;
             try
             {
                 // find universe
-                var universe = UniversesDataStores.Current.Universes.FirstOrDefault(c => c.Id == universeId);
+                var universeFind = UniversesDataStores.Current.Universes.FirstOrDefault(c => c.Id == universeId);
 
-                if (universe == null)
+                if (universeFind == null)
                 {
                     _logger.LogInformation($"Universe with id {universeId} was'nt found when creating character.");
                     return NotFound();
@@ -186,15 +261,16 @@ namespace UniverseCreation.API.Adapter.In.Controllers
         }
 
         [HttpPut("details/{characterId}")]
-        public ActionResult UpdateCharacter(int universeId, int characterId,
+        public ActionResult UpdateCharacter(int universe, int characterId,
             [FromBody] CharacterForUpdateDto character)
         {
+            int universeId = universe;
             try
             {
                 // find universe
-                var universe = UniversesDataStores.Current.Universes.FirstOrDefault(c => c.Id == universeId);
+                var universeFind = UniversesDataStores.Current.Universes.FirstOrDefault(c => c.Id == universeId);
 
-                if (universe == null)
+                if (universeFind == null)
                 {
                     _logger.LogInformation($"Universe with id {universeId} was'nt found when updating character.");
                     return NotFound();
@@ -228,15 +304,16 @@ namespace UniverseCreation.API.Adapter.In.Controllers
         }
 
         [HttpPatch("details/{characterId}")]
-        public ActionResult PartiallyUdpateCharacter(int universeId, int characterId,
+        public ActionResult PartiallyUdpateCharacter(int universe, int characterId,
             [FromBody] JsonPatchDocument<CharacterForUpdateDto> patchDocument)
         {
+            int universeId = universe;
             try
             {
                 // find universe
-                var universe = UniversesDataStores.Current.Universes.FirstOrDefault(c => c.Id == universeId);
+                var universeFind = UniversesDataStores.Current.Universes.FirstOrDefault(c => c.Id == universeId);
 
-                if (universe == null)
+                if (universeFind == null)
                 {
                     _logger.LogInformation($"Universe with id {universeId} was'nt found when updating character.");
                     return NotFound();
@@ -302,14 +379,15 @@ namespace UniverseCreation.API.Adapter.In.Controllers
         }
 
         [HttpDelete("details/{characterId}")]
-        public ActionResult DeleteCharacter(int universeId, int characterId)
+        public ActionResult DeleteCharacter(int universe, int characterId)
         {
+            int universeId = universe;
             try
             {
                 // find universe
-                var universe = UniversesDataStores.Current.Universes.FirstOrDefault(c => c.Id == universeId);
+                var universeFind = UniversesDataStores.Current.Universes.FirstOrDefault(c => c.Id == universeId);
 
-                if (universe == null)
+                if (universeFind == null)
                 {
                     _logger.LogInformation($"Universe with id {universeId} was'nt found when deleting character.");
                     return NotFound();

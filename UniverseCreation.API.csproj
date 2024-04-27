@@ -16,7 +16,6 @@
 
   <ItemGroup>
     <Folder Include="Adapter\Out\Persistance\" />
-    <Folder Include="Application\Domain\Model\" />
     <Folder Include="Application\Domain\Service\" />
     <Folder Include="Application\Port\In\" />
     <Folder Include="Application\Port\Out\" />

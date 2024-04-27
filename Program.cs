@@ -37,7 +37,9 @@ builder.Services.AddSingleton(GraphDatabase.Driver(settings.Neo4jConnection, Aut
 builder.Services.AddScoped<INeo4jDataAccess, Neo4jDataAccess>();
 
 // Registration for the domain repository class
-builder.Services.AddTransient<ICharacterRepository, CharacterRepository>();
+builder.Services.AddTransient<ICharacterRepositoryGraph, CharacterRepositoryGraph>();
+builder.Services.AddTransient<IFamilyTreeRepositoryGraph, FamilyTreeRepositoryGraph>();
+builder.Services.AddTransient<IUniverseRepositoryGraph, UniverseRepositoryGraph>();
 
 // For the front
 // -> TO DO add security

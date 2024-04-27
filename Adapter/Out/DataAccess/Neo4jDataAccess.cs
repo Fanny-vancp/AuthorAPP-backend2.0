@@ -77,10 +77,19 @@ namespace UniverseCreation.API.Adapter.Out.DataAccess
 
                 var result = await _session.ExecuteWriteAsync(async tx =>
                 {
-                    T scalar = default(T);
                     var res = await tx.RunAsync(query, parameters);
-                    scalar = (await res.SingleAsync())[0].As<T>();
-                    return scalar;
+
+                    // Check if the result contains any records
+                    if (await res.FetchAsync())
+                    {
+                        // If there are records, extract and return the first one
+                        return (await res.SingleAsync())[0].As<T>();
+                    }
+                    else
+                    {
+                        // If the result is empty, return default value for T
+                        return default(T);
+                    }
                 });
 
                 return result;
