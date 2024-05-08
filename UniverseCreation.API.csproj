@@ -12,13 +12,10 @@
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
     <PackageReference Include="Neo4j.Driver" Version="5.18.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.5.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Adapter\Out\Persistance\" />
-    <Folder Include="Application\Domain\Service\" />
-    <Folder Include="Application\Port\In\" />
-    <Folder Include="Application\Port\Out\" />
     <Folder Include="Test\" />
   </ItemGroup>
 

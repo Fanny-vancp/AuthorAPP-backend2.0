@@ -37,3 +37,4 @@ C:\Users\fanny\Documents\MyProject\TFE\backend\UniverseCreation.API\obj\Debug\ne
 C:\Users\fanny\Documents\MyProject\TFE\backend\UniverseCreation.API\obj\Debug\net8.0\UniverseCreation.API.genruntimeconfig.cache
 C:\Users\fanny\Documents\MyProject\TFE\backend\UniverseCreation.API\obj\Debug\net8.0\ref\UniverseCreation.API.dll
 C:\Users\fanny\Documents\MyProject\TFE\backend\UniverseCreation.API\obj\Debug\net8.0\UniverseCreation.API.sourcelink.json
+C:\Users\fanny\Documents\MyProject\TFE\backend\UniverseCreation.API\bin\Debug\net8.0\Swashbuckle.AspNetCore.Annotations.dll

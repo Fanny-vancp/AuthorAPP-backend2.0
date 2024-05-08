@@ -2,13 +2,13 @@
 
 namespace UniverseCreation.API.Adapter.Out.Repository
 {
-    public interface IFamilyTreeRepositoryGraph
+   /* public interface IFamilyTreeRepositoryGraph
     {
         Task<List<Dictionary<string, object>>> MatchAllFamilyTreeByUniverseName(string universeName);
         Task<bool> AddNewFamilyTree(string universeName, string familyTreeName);
         Task<List<Dictionary<string, object>>> FindFamilyTree(string universeName);
-    }
-    public class FamilyTreeRepositoryGraph : IFamilyTreeRepositoryGraph
+    }*/
+    public class FamilyTreeRepositoryGraph 
     {
         private INeo4jDataAccess _neo4JDataAccess;
         private ILogger<FamilyTreeRepositoryGraph> _logger;
@@ -20,7 +20,7 @@ namespace UniverseCreation.API.Adapter.Out.Repository
         }
 
         // get all familyTree from an universe
-        public async Task<List<Dictionary<string, object>>> MatchAllFamilyTreeByUniverseName(string universe)
+        public async Task<List<Dictionary<string, object>>> MatchFamiliesTreesFromUniverse(string universe)
         {
             var query = @"MATCH(univers: Universe { name: $universe })< - [:BELONGS_TO] - (familyTree: FamilyTree) 
                         RETURN familyTree";
@@ -33,7 +33,7 @@ namespace UniverseCreation.API.Adapter.Out.Repository
         }
 
         // Creation of a new familytree
-        public async Task<bool> AddNewFamilyTree(string universe, string familyTreeName)
+        public async Task<bool> CreateFamilyTree(string universe, string familyTreeName)
         {
             if (familyTreeName != null && !string.IsNullOrWhiteSpace(familyTreeName))
             {

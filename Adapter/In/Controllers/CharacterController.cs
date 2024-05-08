@@ -4,6 +4,8 @@ using UniverseCreation.API.Adapter.Out.Repository;
 using UniverseCreation.API.DataStore.ModelDto;
 using UniverseCreation.API.DataStore;
 using UniverseCreation.API.Application.Domain.Model;
+using UniverseCreation.API.Application.Port.In;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace UniverseCreation.API.Adapter.In.Controllers
 {
@@ -12,30 +14,33 @@ namespace UniverseCreation.API.Adapter.In.Controllers
     public class CharactersController : ControllerBase
     {
         private readonly ILogger<CharactersController> _logger;
-        private readonly ICharacterRepositoryGraph _characterRepositoryGraph;
-        private readonly IFamilyTreeRepositoryGraph _familyTreeRepositoryGraph;
+        //private readonly ICharacterRepositoryGraph _characterRepositoryGraph;
+        private readonly ICharacterService _characterService;
 
-        public CharactersController(ILogger<CharactersController> logger, ICharacterRepositoryGraph characterRepository, IFamilyTreeRepositoryGraph familyTreeRepositoryGraph)
+        public CharactersController(ILogger<CharactersController> logger, ICharacterService characterService)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _characterRepositoryGraph = characterRepository;
-            _familyTreeRepositoryGraph = familyTreeRepositoryGraph;
+            _characterService = characterService;
         }
 
         
         [HttpGet("{characterName}")]
+        //[SwaggerOperation(Summary = "Search character by name", Description = "Retrieve a character by their name.")]
+        //[SwaggerResponse(200, "The character was found.", typeof(CharacterDto))]
+        //[SwaggerResponse(404, "Character not found.")]
+        //[SwaggerResponse(500, "An error occurred while processing the request.")]
         public async Task<IActionResult> SearchCharacterByName(string universe, string characterName)
         {
             try
             {
-                var characters = await _characterRepositoryGraph.SearchCharacterBythename(universe, characterName);
-
-                /*if (characters == null)
-                {
-                    characters = await _characterRepositoryGraph.
-                }*/
+                var characters = await _characterService.FindCharacterFromString(universe, characterName);
 
                 return Ok(characters);
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogInformation(ex.Message);
+                return NotFound(new { error = ex.Message });
             }
             catch (Exception ex)
             {
@@ -52,8 +57,14 @@ namespace UniverseCreation.API.Adapter.In.Controllers
         {
             try
             {
-                var characters = await _characterRepositoryGraph.MatchAllCharactersByUniverseName(universe);
+                var characters = await _characterService.FindAllCharactersFromUniverseName(universe);
+
                 return Ok(characters);
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogInformation(ex.Message);
+                return NotFound(new { error = ex.Message });
             }
             catch (Exception ex)
             {
@@ -67,57 +78,43 @@ namespace UniverseCreation.API.Adapter.In.Controllers
 
 
         [HttpGet("/api/families_trees/{family_treeName}/characters")]
-        public async Task<IActionResult> GetAllCharactersFromFamilyTreeName(string family_treeName)
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<CharacterNodeDto>))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetAllCharactersByFamilyTreeName(string family_treeName)
         {
             try
             {
-                // check if the family tree exist
-                var familyTreeFinded = await _familyTreeRepositoryGraph.FindFamilyTree(family_treeName);
-                if (familyTreeFinded == null)
-                {
-                    _logger.LogInformation($"Family Tree with the name {family_treeName} was'nt found when accessing characters.");
-                    return NotFound();
-                }
-
-
-                var characters = await _characterRepositoryGraph.MatchAllCharactersFromFamilyTree(family_treeName);
+                var characters = await _characterService.FindAllCharactersFromFamilyTree(family_treeName);
                 return Ok(characters);
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogInformation(ex.Message);
+                return NotFound(new { error = ex.Message });
             }
             catch (Exception ex)
             {
-                _logger.LogCritical($"Exception while getting characters for the family name name : {family_treeName}.",
+                _logger.LogCritical($"Exception while getting characters for the family name : {family_treeName}.",
                     ex);
                 return StatusCode(500,
                     "A problem happened while handling your request.");
             }
-
         }
 
 
         [HttpPost("/api/families_trees/{family_treeName}/characters")]
-        public async Task<IActionResult> AddCharacterInFamilyTreeName([FromBody] RelationForCreationDto relationForCreationDto)
+        public async Task<IActionResult> AddCharacterInFamilyTree([FromBody] RelationForCreationDto relationForCreationDto)
         {
             try
             {
-                // check if the family tree exist
-                var familyTreeFinded = await _familyTreeRepositoryGraph.FindFamilyTree(relationForCreationDto.EndPoint);
-                if (familyTreeFinded == null)
-                {
-                    _logger.LogInformation($"Family Tree with the name {relationForCreationDto.EndPoint} was'nt found when adding character in family tree.");
-                    return NotFound();
-                }
-
-                // check if the character exist
-                var characterFinded = await _characterRepositoryGraph.FindCharacter(relationForCreationDto.StratPoint);
-                if (characterFinded == null)
-                {
-                    _logger.LogInformation($"Character with the name {relationForCreationDto.StratPoint} was'nt found when adding character in familyTree.");
-                    return NotFound();
-                }
-
-
-                await _characterRepositoryGraph.AddCharacterToFamilyTree(relationForCreationDto.EndPoint, relationForCreationDto.StratPoint);
+                await _characterService.InsertCharacterToFamilyTree(relationForCreationDto.EndPoint, relationForCreationDto.StratPoint);
                 return Ok();
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogInformation(ex.Message);
+                return NotFound(new { error = ex.Message });
             }
             catch (Exception ex)
             {
@@ -126,9 +123,119 @@ namespace UniverseCreation.API.Adapter.In.Controllers
                 return StatusCode(500,
                     "A problem happened while handling your request.");
             }
-
         }
 
+        [HttpDelete("/api/families_trees/{family_treeName}/characters/{characterName}")]
+        public async Task<IActionResult> DeleteCharacterFromFamilyTree(string family_treeName, string characterName)
+        {
+            try
+            {
+                await _characterService.RemoveCharacterToFamilyTree(family_treeName, characterName);
+                return Ok();
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogInformation(ex.Message);
+                return NotFound(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical($"Exception while deleting characters from the family name : {family_treeName}.",
+                    ex);
+                return StatusCode(500,
+                    "A problem happened while handling your request.");
+            }
+        }
+
+        [HttpPost("/api/families_trees/{family_treeName}/characters/relation")]
+        public async Task<IActionResult> AddRelationBetweenCharacters(string family_treeName, 
+            [FromBody] RelationForCreationDto relationForCreationDto)
+        {
+            try
+            {
+                await _characterService.InsertRelationBetweenCharacters(relationForCreationDto.StratPoint, 
+                    relationForCreationDto.EndPoint, relationForCreationDto.descriptionRelation);
+                return Ok();
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogInformation(ex.Message);
+                return NotFound(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical($"Exception while creating relation between two characters from the family name : {family_treeName}.",
+                    ex);
+                return StatusCode(500,
+                    "A problem happened while handling your request.");
+            }
+        }
+
+        [HttpDelete("/api/families_trees/{family_treeName}/characters/{characterName1}/relation/{characterName2}")]
+        public async Task<IActionResult> DeleteRelationBetweenCharacter(string characterName1, string characterName2, string family_treeName)
+        {
+            try
+            {
+                await _characterService.RemoveRelationBetweenCharacters(characterName1, characterName2);
+                return Ok();
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogInformation(ex.Message);
+                return NotFound(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical($"Exception while removing relation between two characters from the family name : {family_treeName}.",
+                    ex);
+                return StatusCode(500,
+                    "A problem happened while handling your request.");
+            }
+        }
+
+        [HttpPatch("/api/families_trees/{family_treeName}/characters/relation")]
+        public async Task<IActionResult> PatchRelationBetweenCharacters(string family_treeName, [FromBody] RelationForUpdatingDto relationForUpdatingDto)
+        {
+            try
+            {
+                await _characterService.UpdateRelationBetweenCharacters(relationForUpdatingDto.StratPoint, relationForUpdatingDto.EndPoint, relationForUpdatingDto.descriptionRelation);
+                return Ok();
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogInformation(ex.Message);
+                return NotFound(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical($"Exception while updating relation between two characters from the family name : {family_treeName}.",
+                    ex);
+                return StatusCode(500,
+                    "A problem happened while handling your request.");
+            }
+        }
+
+        [HttpGet("/api/families_trees/{family_treeName}/characters/{character_name}/relation/{relation_description}")]
+        public async Task<IActionResult> GetRelationForCharacter(string family_treeName, string character_name, string relation_description)
+        {
+            try
+            {
+                var characters = await _characterService.FindAllRelationForCharacter(character_name, relation_description);
+                return Ok(characters);
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogInformation(ex.Message);
+                return NotFound(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical($"Exception while getting characters with a relation {relation_description} for the character {character_name} for the family name name : {family_treeName}.",
+                    ex);
+                return StatusCode(500,
+                    "A problem happened while handling your request.");
+            }
+        }
 
         /*[HttpGet("relative")]
         public async Task<IActionResult> GetAllCharactersAndRelative(string universe)

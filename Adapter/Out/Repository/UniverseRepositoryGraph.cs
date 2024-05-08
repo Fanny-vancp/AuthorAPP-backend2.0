@@ -2,11 +2,11 @@
 
 namespace UniverseCreation.API.Adapter.Out.Repository
 {
-    public interface IUniverseRepositoryGraph
+    /*public interface IUniverseRepositoryGraph
     {
         Task<List<Dictionary<string, object>>> FindUniverse(string universeName);
-    }
-    public class UniverseRepositoryGraph : IUniverseRepositoryGraph
+    }*/
+    public class UniverseRepositoryGraph 
     {
         private INeo4jDataAccess _neo4JDataAccess;
         private ILogger<UniverseRepositoryGraph> _logger;

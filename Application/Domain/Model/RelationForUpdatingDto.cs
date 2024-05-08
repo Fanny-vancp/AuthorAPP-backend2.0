@@ -1,9 +1,9 @@
 ﻿namespace UniverseCreation.API.Application.Domain.Model
 {
-    public class RelationForCreationDto
+    public class RelationForUpdatingDto
     {
         public required string StratPoint { get; set; }
         public required string EndPoint { get; set; }
-        public string descriptionRelation { get; set; }
+        public required string descriptionRelation { get; set; }
     }
 }

@@ -2,6 +2,10 @@ using Neo4j.Driver;
 using UniverseCreation.API.Adapter.Out.DataAccess;
 using UniverseCreation.API.Adapter.Out.Repository;
 using UniverseCreation.API;
+using UniverseCreation.API.Application.Port.In;
+using UniverseCreation.API.Application.Domain.Service;
+using UniverseCreation.API.Application.Port.Out;
+using UniverseCreation.API.Adapter.Out.Persistance;
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 var builder = WebApplication.CreateBuilder(args);
@@ -37,9 +41,20 @@ builder.Services.AddSingleton(GraphDatabase.Driver(settings.Neo4jConnection, Aut
 builder.Services.AddScoped<INeo4jDataAccess, Neo4jDataAccess>();
 
 // Registration for the domain repository class
-builder.Services.AddTransient<ICharacterRepositoryGraph, CharacterRepositoryGraph>();
-builder.Services.AddTransient<IFamilyTreeRepositoryGraph, FamilyTreeRepositoryGraph>();
-builder.Services.AddTransient<IUniverseRepositoryGraph, UniverseRepositoryGraph>();
+//builder.Services.AddTransient<ICharacterRepositoryGraph, CharacterRepositoryGraph>();
+//builder.Services.AddTransient<IFamilyTreeRepositoryGraph, FamilyTreeRepositoryGraph>();
+//builder.Services.AddTransient<IUniverseRepositoryGraph, UniverseRepositoryGraph>();
+builder.Services.AddTransient<ICharacterService, CharacterService>();
+builder.Services.AddTransient<ICharacterPersistance, CharacterPersistance>();
+builder.Services.AddTransient<CharacterRepositoryGraph, CharacterRepositoryGraph>(); 
+builder.Services.AddTransient<IFamilyTreeService, FamilyTreeService>();
+builder.Services.AddTransient<IFamilyTreePersistance, FamilyTreePersistance>();
+builder.Services.AddTransient<FamilyTreeRepositoryGraph, FamilyTreeRepositoryGraph>();
+builder.Services.AddTransient<IUniverseService, UniverseService>();
+builder.Services.AddTransient<IUniversePersistance, UniversePersistance>();
+builder.Services.AddTransient<UniverseRepositoryGraph, UniverseRepositoryGraph>();
+
+
 
 // For the front
 // -> TO DO add security

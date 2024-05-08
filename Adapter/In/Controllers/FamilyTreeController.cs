@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using UniverseCreation.API.Adapter.Out.Repository;
 using UniverseCreation.API.Application.Domain.Model;
+using UniverseCreation.API.Application.Port.In;
 
 namespace UniverseCreation.API.Adapter.In.Controllers
 {
@@ -10,32 +11,27 @@ namespace UniverseCreation.API.Adapter.In.Controllers
     public class FamilyTreeController : ControllerBase
     {
         private readonly ILogger<FamilyTreeController> _logger;
-        private readonly IFamilyTreeRepositoryGraph _familyTreeRepositoryGraph;
-        private readonly IUniverseRepositoryGraph _universeRepositoryGraph;
+        private readonly IFamilyTreeService _familyTreeService;
 
-        public FamilyTreeController(ILogger<FamilyTreeController> logger, IFamilyTreeRepositoryGraph familyTreeRepositoryGraph, IUniverseRepositoryGraph universeRepositoryGraph)
+        public FamilyTreeController(ILogger<FamilyTreeController> logger, IFamilyTreeService familyTreeService)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _familyTreeRepositoryGraph = familyTreeRepositoryGraph;
-            _universeRepositoryGraph = universeRepositoryGraph;
+            _familyTreeService = familyTreeService;
         }
 
         [HttpGet()]
-        public async Task<IActionResult> GetAllFamilyTreeFromUniverse(string universe)
+        public async Task<IActionResult> GetAllFamiliesTreesByUniverseName(string universe)
         {
             try
             {
-                // check if the universe exist
-                var universeFinded = await _universeRepositoryGraph.FindUniverse(universe);
-                if (universeFinded == null)
-                {
-                    _logger.LogInformation($"Universe with the name {universe} was'nt found when accessing familyTree.");
-                    return NotFound();
-                }
-
-                var familyTree = await _familyTreeRepositoryGraph.MatchAllFamilyTreeByUniverseName(universe);
+                var familyTree = await _familyTreeService.FindAllFamiliesTreesFromUniverse(universe);
 
                 return Ok(familyTree);
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogInformation(ex.Message);
+                return NotFound(new { error = ex.Message });
             }
             catch (Exception ex)
             {
@@ -47,22 +43,18 @@ namespace UniverseCreation.API.Adapter.In.Controllers
         }
 
         [HttpPost()]
-        public async Task<IActionResult> CreateFamilyTree(string universe, [FromBody] FamilyTreeForCreationDto familyTree)
+        public async Task<IActionResult> PostNewFamilyTree(string universe, [FromBody] FamilyTreeForCreationDto familyTree)
         {
             try
             {
-
-                // check if the universe exist
-                var universeFinded = await _universeRepositoryGraph.FindUniverse(universe);
-                if (universeFinded == null)
-                {
-                    _logger.LogInformation($"Universe with the name {universe} was'nt found when creating familyTree.");
-                    return NotFound();
-                }
-
-                await _familyTreeRepositoryGraph.AddNewFamilyTree(universe, familyTree.Name);
+                await _familyTreeService.AddFamilyTree(universe, familyTree.Name);
 
                 return Ok();
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogInformation(ex.Message);
+                return NotFound(new { error = ex.Message });
             }
             catch (Exception ex)
             {
