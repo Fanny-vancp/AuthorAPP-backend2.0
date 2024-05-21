@@ -237,26 +237,12 @@ namespace UniverseCreation.API.Adapter.In.Controllers
             }
         }
 
-        /*[HttpGet("relative")]
-        public async Task<IActionResult> GetAllCharactersAndRelative(string universe)
-        {
-            try
-            {
-                var charactersAndRelative = await _characterRepository.MatchAllCharactersWithHisRelative(universe);
-                return Ok(charactersAndRelative);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogCritical($"Exception while getting characters for universe with the name : {universe}.",
-                    ex);
-                return StatusCode(500,
-                    "A problem happened while handling your request.");
-            }
-
-        }*/
+        
 
 
-        [HttpGet("details")]
+
+
+        /*[HttpGet("details")]
         public ActionResult<IEnumerable<CharacterDto>> GetCharacters(int universe)
         {
             try
@@ -522,6 +508,6 @@ namespace UniverseCreation.API.Adapter.In.Controllers
                     "A problem happened while handling your request.");
             }
 
-        }
+        }*/
     }
 }

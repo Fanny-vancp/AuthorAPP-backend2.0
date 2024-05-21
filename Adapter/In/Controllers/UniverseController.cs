@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
-using UniverseCreation.API.DataStore.ModelDto;
+//using UniverseCreation.API.DataStore.ModelDto;
 using UniverseCreation.API.DataStore;
+using UniverseCreation.API.Application.Domain.Model;
+using UniverseCreation.API.Application.Port.In;
 
 namespace UniverseCreation.API.Adapter.In.Controllers
 {
@@ -10,16 +12,36 @@ namespace UniverseCreation.API.Adapter.In.Controllers
     public class UniversesController : ControllerBase
     {
         private readonly ILogger<UniversesController> _logger;
+        private readonly IUniverseService _universeService;
 
-        public UniversesController(ILogger<UniversesController> logger)
+        public UniversesController(ILogger<UniversesController> logger, IUniverseService universeService)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _universeService = universeService;
         }
 
         [HttpGet()]
-        public ActionResult<IEnumerable<UniverseDto>> GetUniverses()
+        public async Task<IActionResult> GetUniverses()
         {
             try
+            {
+                var universes = await _universeService.FindAllUniverse();
+
+                return Ok(universes);
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogInformation(ex.Message);
+                return NotFound(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical("Exception occurred while getting universes: {0}.",
+                    ex);
+                return StatusCode(500,
+                    "A problem happened while handling your request.");
+            }
+            /*try
             {
                 return Ok(UniversesDataStores.Current.Universes);
             }
@@ -29,12 +51,32 @@ namespace UniverseCreation.API.Adapter.In.Controllers
                     ex);
                 return StatusCode(500,
                     "A problem happened while handling your request.");
-            }
+            }*/
         }
 
-        [HttpGet("{idUnivers}", Name = "GetUniverse")]
-        public ActionResult<UniverseDto> GetUniverse(int idUnivers)
+        [HttpGet("{idUniverse}", Name = "GetUniverse")]
+        public async Task<IActionResult> GetUniverse(string idUniverse)
         {
+
+            try
+            {
+                var universe = await _universeService.FindUniverseById(idUniverse);
+
+                return Ok(universe);
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogInformation(ex.Message);
+                return NotFound(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical("Exception occurred while getting universes: {0}.",
+                    ex);
+                return StatusCode(500,
+                    "A problem happened while handling your request.");
+            }
+            /*
             try
             {
                 // find universe
@@ -54,10 +96,11 @@ namespace UniverseCreation.API.Adapter.In.Controllers
                     ex);
                 return StatusCode(500,
                     "A problem happened while handling your request.");
-            }
+            }*/
 
         }
 
+        /*
         [HttpPost]
         public ActionResult<UniverseDto> CreationUniverse([FromBody] UniverseForCreationDto universe)
         {
@@ -170,6 +213,6 @@ namespace UniverseCreation.API.Adapter.In.Controllers
                     "A problem happened while handling your request.");
             }
 
-        }
+        }*/
     }
 }

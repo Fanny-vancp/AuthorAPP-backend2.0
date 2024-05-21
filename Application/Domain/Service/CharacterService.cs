@@ -65,6 +65,7 @@ namespace UniverseCreation.API.Application.Domain.Service
                 characterNodeDtos.Add(characterNodeDto);
             }
 
+            characterNodeDtos = characterNodeDtos.OrderBy(c => c.level).ToList();
 
             return characterNodeDtos;
         }

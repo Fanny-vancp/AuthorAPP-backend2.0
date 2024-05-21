@@ -29,6 +29,7 @@ builder.Services.AddProblemDetails(Options =>
 // Database Graph
 // Register application setting using IOption provider mechanism
 builder.Services.Configure<ApplicationSettings>(builder.Configuration.GetSection("ApplicationSettings"));
+//builder.Services.Configure<ApplicationSettings>(builder.Configuration.GetSection("ApplicationSettings"));
 
 // Fetch settings object from configuration
 var settings = new ApplicationSettings();
@@ -39,11 +40,10 @@ builder.Services.AddSingleton(GraphDatabase.Driver(settings.Neo4jConnection, Aut
 
 // Data Access Wrapper over Neoj4 session, that is a helper class for executing parameterized Neo4j cypher queries in Transactions
 builder.Services.AddScoped<INeo4jDataAccess, Neo4jDataAccess>();
+builder.Services.AddScoped<UniverseRepositoryMongo, UniverseRepositoryMongo>();
+
 
 // Registration for the domain repository class
-//builder.Services.AddTransient<ICharacterRepositoryGraph, CharacterRepositoryGraph>();
-//builder.Services.AddTransient<IFamilyTreeRepositoryGraph, FamilyTreeRepositoryGraph>();
-//builder.Services.AddTransient<IUniverseRepositoryGraph, UniverseRepositoryGraph>();
 builder.Services.AddTransient<ICharacterService, CharacterService>();
 builder.Services.AddTransient<ICharacterPersistance, CharacterPersistance>();
 builder.Services.AddTransient<CharacterRepositoryGraph, CharacterRepositoryGraph>(); 
@@ -53,6 +53,10 @@ builder.Services.AddTransient<FamilyTreeRepositoryGraph, FamilyTreeRepositoryGra
 builder.Services.AddTransient<IUniverseService, UniverseService>();
 builder.Services.AddTransient<IUniversePersistance, UniversePersistance>();
 builder.Services.AddTransient<UniverseRepositoryGraph, UniverseRepositoryGraph>();
+//builder.Services.AddTransient<UniverseRepositoryMongo, UniverseRepositoryMongo>();
+
+
+
 
 
 

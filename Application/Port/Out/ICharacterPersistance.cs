@@ -12,7 +12,7 @@
         Task<bool> FixRelationBetweenCharacters(string characterName1, string characterName2, string relationDescription);
         Task<List<Dictionary<string, object>>> GetAllRelationForCharacter(string characterName, string relationDescription);
         Task<List<Dictionary<string, object>>> GetLevelFamilyTreeForCharacter(string characterName, string familyTree);
+
         
-        //Task<List<Dictionary<string, object>>> MatchAllCharactersWithHisRelative(string universeName);
     }
 }

@@ -38,3 +38,16 @@ C:\Users\fanny\Documents\MyProject\TFE\backend\UniverseCreation.API\obj\Debug\ne
 C:\Users\fanny\Documents\MyProject\TFE\backend\UniverseCreation.API\obj\Debug\net8.0\ref\UniverseCreation.API.dll
 C:\Users\fanny\Documents\MyProject\TFE\backend\UniverseCreation.API\obj\Debug\net8.0\UniverseCreation.API.sourcelink.json
 C:\Users\fanny\Documents\MyProject\TFE\backend\UniverseCreation.API\bin\Debug\net8.0\Swashbuckle.AspNetCore.Annotations.dll
+C:\Users\fanny\Documents\MyProject\TFE\backend\UniverseCreation.API\bin\Debug\net8.0\AWSSDK.Core.dll
+C:\Users\fanny\Documents\MyProject\TFE\backend\UniverseCreation.API\bin\Debug\net8.0\AWSSDK.SecurityToken.dll
+C:\Users\fanny\Documents\MyProject\TFE\backend\UniverseCreation.API\bin\Debug\net8.0\DnsClient.dll
+C:\Users\fanny\Documents\MyProject\TFE\backend\UniverseCreation.API\bin\Debug\net8.0\MongoDB.Bson.dll
+C:\Users\fanny\Documents\MyProject\TFE\backend\UniverseCreation.API\bin\Debug\net8.0\MongoDB.Driver.dll
+C:\Users\fanny\Documents\MyProject\TFE\backend\UniverseCreation.API\bin\Debug\net8.0\MongoDB.Driver.Core.dll
+C:\Users\fanny\Documents\MyProject\TFE\backend\UniverseCreation.API\bin\Debug\net8.0\MongoDB.Libmongocrypt.dll
+C:\Users\fanny\Documents\MyProject\TFE\backend\UniverseCreation.API\bin\Debug\net8.0\SharpCompress.dll
+C:\Users\fanny\Documents\MyProject\TFE\backend\UniverseCreation.API\bin\Debug\net8.0\Snappier.dll
+C:\Users\fanny\Documents\MyProject\TFE\backend\UniverseCreation.API\bin\Debug\net8.0\ZstdSharp.dll
+C:\Users\fanny\Documents\MyProject\TFE\backend\UniverseCreation.API\bin\Debug\net8.0\runtimes\linux\native\libmongocrypt.so
+C:\Users\fanny\Documents\MyProject\TFE\backend\UniverseCreation.API\bin\Debug\net8.0\runtimes\osx\native\libmongocrypt.dylib
+C:\Users\fanny\Documents\MyProject\TFE\backend\UniverseCreation.API\bin\Debug\net8.0\runtimes\win\native\mongocrypt.dll

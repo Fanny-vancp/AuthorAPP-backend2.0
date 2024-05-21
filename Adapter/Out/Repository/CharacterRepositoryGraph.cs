@@ -95,7 +95,7 @@ namespace UniverseCreation.API.Adapter.Out.Repository
             {
                 var query = @"MATCH (familyTree: FamilyTree {name: $familyTreeName}),
 	                        (character: Character {name: $characterName})
-                            CREATE (character)-[:FAMILY_FROM]->(familyTree)";
+                            CREATE (character)-[:FAMILY_FROM {level: -1}]->(familyTree)";
 
                 IDictionary<string, object> parameters = new Dictionary<string, object> {
                     { "familyTreeName", familyTreeName },
