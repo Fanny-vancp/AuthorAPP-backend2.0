@@ -21,7 +21,5 @@ namespace UniverseCreation.API.Application.Domain.Model
         [BsonElement("images")]
         public List<string> Images { get; set; }
 
-        [BsonElement("identity")]
-        public List<IdentityInfo> Identity { get; set; }
     }
 }

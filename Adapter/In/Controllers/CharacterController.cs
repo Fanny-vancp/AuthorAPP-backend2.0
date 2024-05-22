@@ -29,7 +29,7 @@ namespace UniverseCreation.API.Adapter.In.Controllers
         //[SwaggerResponse(200, "The character was found.", typeof(CharacterDto))]
         //[SwaggerResponse(404, "Character not found.")]
         //[SwaggerResponse(500, "An error occurred while processing the request.")]
-        public async Task<IActionResult> SearchCharacterByName(string universe, string characterName)
+        public async Task<IActionResult> SearchCharacterByNameNode(string universe, string characterName)
         {
             try
             {
@@ -53,11 +53,11 @@ namespace UniverseCreation.API.Adapter.In.Controllers
 
         
         [HttpGet()]
-        public async Task<IActionResult> GetAllCharactersByUniverseName(string universe)
+        public async Task<IActionResult> GetAllCharactersByUniverseNameNode(string universe)
         {
             try
             {
-                var characters = await _characterService.FindAllCharactersFromUniverseName(universe);
+                var characters = await _characterService.FindAllCharactersNodeFromUniverseName(universe);
 
                 return Ok(characters);
             }
@@ -81,7 +81,7 @@ namespace UniverseCreation.API.Adapter.In.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<CharacterNodeDto>))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetAllCharactersByFamilyTreeName(string family_treeName)
+        public async Task<IActionResult> GetAllCharactersByFamilyTreeNameNode(string family_treeName)
         {
             try
             {
@@ -237,8 +237,50 @@ namespace UniverseCreation.API.Adapter.In.Controllers
             }
         }
 
-        
 
+        [HttpGet("/api/universe/{universeId}/characters/details/")]
+        public async Task<IActionResult> GetAllCharacters(String universeId)
+        {
+            try
+            {
+                var characters = await _characterService.FindAllCharacters(universeId);
+                return Ok(characters);
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogInformation(ex.Message);
+                return NotFound(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical($"Exception while getting all characters from the universe with the id: {universeId}",
+                    ex);
+                return StatusCode(500,
+                    "A problem happened while handling your request.");
+            }
+        }
+
+        [HttpGet("/api/universe/characters/details/{characterId}")]
+        public async Task<IActionResult> GetCharaterById(String characterId)
+        {
+            try
+            {
+                var characters = await _characterService.FindCharacterById(characterId);
+                return Ok(characters);
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogInformation(ex.Message);
+                return NotFound(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical($"Exception while getting character with the id: {characterId}",
+                    ex);
+                return StatusCode(500,
+                    "A problem happened while handling your request.");
+            }
+        }
 
 
 

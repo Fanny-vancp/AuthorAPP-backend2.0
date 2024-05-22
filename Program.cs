@@ -41,6 +41,7 @@ builder.Services.AddSingleton(GraphDatabase.Driver(settings.Neo4jConnection, Aut
 // Data Access Wrapper over Neoj4 session, that is a helper class for executing parameterized Neo4j cypher queries in Transactions
 builder.Services.AddScoped<INeo4jDataAccess, Neo4jDataAccess>();
 builder.Services.AddScoped<UniverseRepositoryMongo, UniverseRepositoryMongo>();
+builder.Services.AddScoped<CharacterRepositoryMongo, CharacterRepositoryMongo>();
 
 
 // Registration for the domain repository class

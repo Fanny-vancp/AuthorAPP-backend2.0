@@ -19,9 +19,9 @@ namespace UniverseCreation.API.Application.Domain.Service
             return characters;
         }
 
-        public async Task<List<Dictionary<string, object>>> FindAllCharactersFromUniverseName(string universe)
+        public async Task<List<Dictionary<string, object>>> FindAllCharactersNodeFromUniverseName(string universe)
         {
-            var characters = await _characterPersistance.GetAllCharactersFromUniverseName(universe);
+            var characters = await _characterPersistance.GetAllCharactersNodeFromUniverseName(universe);
             return characters;
         }
 
@@ -99,6 +99,18 @@ namespace UniverseCreation.API.Application.Domain.Service
         {
             var characters = await _characterPersistance.GetAllRelationForCharacter(characterName, relationDescription);
             return characters;
+        }
+
+        public async Task<List<CharacterDto>> FindAllCharacters(string idUniverse)
+        {
+            var characters = await _characterPersistance.GetAllCharacters(idUniverse);
+            return characters;
+        }
+
+        public async Task<CharacterDetailsDto> FindCharacterById(string idCharacter)
+        {
+            var character = await _characterPersistance.GetCharacterById(idCharacter);
+            return character;
         }
     }
 }

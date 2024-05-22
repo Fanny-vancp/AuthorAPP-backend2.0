@@ -11,14 +11,19 @@ namespace UniverseCreation.API.Adapter.Out.Persistance
         private readonly CharacterRepositoryGraph _characterRepositoryGraph;
         private readonly FamilyTreeRepositoryGraph _familyTreeRepositoryGraph;
         private readonly UniverseRepositoryGraph _universeRepositoryGraph;
+        private readonly CharacterRepositoryMongo _characterRepositoryMongo;
+        private readonly UniverseRepositoryMongo _universeRepositoryMongo;
         
         public CharacterPersistance(ILogger<CharacterPersistance> logger, CharacterRepositoryGraph characterRepositoryGraph, 
-            FamilyTreeRepositoryGraph familyTreeRepositoryGraph, UniverseRepositoryGraph universeRepositoryGraph)
+            FamilyTreeRepositoryGraph familyTreeRepositoryGraph, UniverseRepositoryGraph universeRepositoryGraph,
+            CharacterRepositoryMongo characterRepositoryMongo, UniverseRepositoryMongo universeRepositoryMongo)
         {
             _logger = logger;
             _characterRepositoryGraph = characterRepositoryGraph;
             _familyTreeRepositoryGraph = familyTreeRepositoryGraph;
             _universeRepositoryGraph = universeRepositoryGraph;
+            _characterRepositoryMongo = characterRepositoryMongo;
+            _universeRepositoryMongo = universeRepositoryMongo;
         }
 
         public async Task<List<Dictionary<string, object>>> GetCharacterFromString(string universe, string searchName)
@@ -35,7 +40,7 @@ namespace UniverseCreation.API.Adapter.Out.Persistance
             return characters;
         }
 
-        public async Task<List<Dictionary<string, object>>> GetAllCharactersFromUniverseName(string universe)
+        public async Task<List<Dictionary<string, object>>> GetAllCharactersNodeFromUniverseName(string universe)
         {
             // check if the universe exist
             var universeFound = await _universeRepositoryGraph.FindUniverse(universe);
@@ -205,6 +210,32 @@ namespace UniverseCreation.API.Adapter.Out.Persistance
 
             var level = await _characterRepositoryGraph.MatchRelationFamilyFromLevel(characterName, familyTreeName);
             return level;
+        }
+
+        public async Task<List<CharacterDto>> GetAllCharacters(string universeId)
+        {
+            var universe = await _universeRepositoryMongo.CatchUniverseById(universeId);
+            var allCharacters = new List<CharacterDto>();
+
+            if (universe != null && universe.Characters != null)
+            {
+                foreach (var characterReference in universe.Characters)
+                {
+                    var character = await _characterRepositoryMongo.CatchCharacterById(characterReference.CharacterId);
+                    if (character != null)
+                    {
+                        allCharacters.Add(character);
+                    }
+                }
+            }
+
+            return allCharacters;
+        }
+
+        public async Task<CharacterDetailsDto> GetCharacterById(string characterId)
+        {
+            var character = await _characterRepositoryMongo.CatchCharacterDetailsById(characterId);
+            return character;
         }
     }
 }
