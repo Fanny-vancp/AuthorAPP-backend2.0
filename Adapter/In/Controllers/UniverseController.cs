@@ -41,17 +41,6 @@ namespace UniverseCreation.API.Adapter.In.Controllers
                 return StatusCode(500,
                     "A problem happened while handling your request.");
             }
-            /*try
-            {
-                return Ok(UniversesDataStores.Current.Universes);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogCritical("Exception occurred while getting universes: {0}.",
-                    ex);
-                return StatusCode(500,
-                    "A problem happened while handling your request.");
-            }*/
         }
 
         [HttpGet("{idUniverse}", Name = "GetUniverse")]
@@ -76,28 +65,30 @@ namespace UniverseCreation.API.Adapter.In.Controllers
                 return StatusCode(500,
                     "A problem happened while handling your request.");
             }
-            /*
+
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> PostNewUniverse([FromBody]UniverseForCreationDto universe)
+        {
             try
             {
-                // find universe
-                var universeToReturn = UniversesDataStores.Current.Universes.FirstOrDefault(c => c.Id == idUnivers);
+                await _universeService.CreateNewUniverse(universe);
 
-                if (universeToReturn == null)
-                {
-                    _logger.LogInformation($"Universe with id {idUnivers} was'nt found when getting universe.");
-                    return NotFound();
-                }
-
-                return Ok(universeToReturn);
+                return Ok();
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogInformation(ex.Message);
+                return NotFound(new { error = ex.Message });
             }
             catch (Exception ex)
             {
-                _logger.LogCritical($"Exception occurred while getting universe with the id {idUnivers}.",
+                _logger.LogCritical("Exception occurred while getting universes: {0}.",
                     ex);
                 return StatusCode(500,
                     "A problem happened while handling your request.");
-            }*/
-
+            }
         }
 
         /*

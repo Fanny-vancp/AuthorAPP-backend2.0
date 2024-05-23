@@ -5,6 +5,7 @@ namespace UniverseCreation.API.Application.Port.Out
     public interface IUniversePersistance
     {
         Task<List<UniverseDto>> GetAllUniverses();
-        Task<UniverseDto> GetUniverseById(string id);
+        Task<UniverseDetailsDto> GetUniverseById(string id);
+        Task<bool> AddNewUniverse(UniverseForCreationDto universe);
     }
 }

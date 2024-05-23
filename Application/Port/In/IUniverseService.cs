@@ -5,6 +5,7 @@ namespace UniverseCreation.API.Application.Port.In
     public interface IUniverseService
     {
         Task<List<UniverseDto>> FindAllUniverse();
-        Task<UniverseDto> FindUniverseById(string id);
+        Task<UniverseDetailsDto> FindUniverseById(string id);
+        Task<bool> CreateNewUniverse(UniverseForCreationDto universe);
     }
 }

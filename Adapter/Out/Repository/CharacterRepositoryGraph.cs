@@ -57,24 +57,6 @@ namespace UniverseCreation.API.Adapter.Out.Repository
             return characters;
         }
 
-        // get a character and his relative
-        /*public async Task<List<Dictionary<string, object>>> MatchAllCharactersWithHisRelative(string universe)
-        {
-            var query = @"MATCH (univers:Universe { name: $universe })<-[:CAST_FROM]-(character:Character)
-                        MATCH (character)-[rel:RELATIVE_TO]->(otherCharacter:Character)
-                        RETURN character, rel, otherCharacter";
-
-            IDictionary<string, object> parameters = new Dictionary<string, object> { { "universe", universe } };
-
-            var rels = await _neo4JDataAccess.ExecuteReadDictionaryAsync(query, "rel", parameters);
-
-            var characters = await _neo4JDataAccess.ExecuteReadDictionaryAsync(query, "character", parameters);
-
-            var result = new List<Dictionary<string, object>>();
-
-            return result;
-        }*/
-
         // get all characters from a familyTree
         public async Task<List<Dictionary<string, object>>> MatchAllCharactersFromFamilyTree(string familyTree)
         {

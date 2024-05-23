@@ -16,9 +16,16 @@ namespace UniverseCreation.API.Application.Domain.Service
         {
             return await _universePersistance.GetAllUniverses();
         }
-        public async Task<UniverseDto> FindUniverseById(string id)
+
+        public async Task<UniverseDetailsDto> FindUniverseById(string id)
         {
             return await _universePersistance.GetUniverseById(id);
         }
+
+        public async Task<bool> CreateNewUniverse(UniverseForCreationDto universe)
+        {
+            return await _universePersistance.AddNewUniverse(universe);
+        }
+
     }
 }

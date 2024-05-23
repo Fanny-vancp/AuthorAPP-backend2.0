@@ -37,13 +37,13 @@ namespace UniverseCreation.API.Adapter.Out.Repository
             }
         }
 
-        public async Task<List<UniverseDto>> CatchAllUniverse()
+        public async Task<List<UniverseDetailsDto>> CatchAllUniverse()
         {
             try
             {
                 _logger.LogInformation("Fetching all universes from MongoDB.");
                 var documents = await _collection.Find(_ => true).ToListAsync();
-                var universeList = new List<UniverseDto>();
+                var universeList = new List<UniverseDetailsDto>();
 
                 if (documents == null || !documents.Any())
                 {
@@ -66,7 +66,7 @@ namespace UniverseCreation.API.Adapter.Out.Repository
             }
         }
 
-        public async Task<UniverseDto> CatchUniverseById(string universeId)
+        public async Task<UniverseDetailsDto> CatchUniverseById(string universeId)
         {
             try
             {
@@ -78,7 +78,7 @@ namespace UniverseCreation.API.Adapter.Out.Repository
                 if (universe == null)
                 {
                     _logger.LogWarning("No universe found with ID: {UniverseId}", universeId);
-                    return new UniverseDto();
+                    return new UniverseDetailsDto();
                 }
 
                 _logger.LogInformation("Successfully fetched universe with ID: {UniverseId}", universeId);
@@ -91,13 +91,39 @@ namespace UniverseCreation.API.Adapter.Out.Repository
             }
         }
 
-        private UniverseDto ConvertBsonToUniverse(BsonDocument document)
+        public async Task<bool> InsertUniverse(UniverseForCreationDto universe)
+        {
+            try
+            {
+                _logger.LogInformation("Inserting new universe into MongoDB.");
+
+                BsonArray charactersArray = new BsonArray();
+                var bsonDocument = new BsonDocument
+                {
+                    { "name", universe.Name },
+                    { "literary_genre", universe.LiteraryGenre },
+                    { "characters", charactersArray }
+                };
+
+                await _collection.InsertOneAsync(bsonDocument);
+
+                _logger.LogInformation("Successfully inserted new universe.");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while inserting new universe.");
+                return false;
+            }
+        }
+
+        private UniverseDetailsDto ConvertBsonToUniverse(BsonDocument document)
         {
             if (document == null) return null;
 
             var charactersArray = document["characters"].AsBsonArray;
 
-            return new UniverseDto
+            return new UniverseDetailsDto
             {
                 Id = document["_id"].AsObjectId.ToString(),
                 Name = document["name"].AsString,

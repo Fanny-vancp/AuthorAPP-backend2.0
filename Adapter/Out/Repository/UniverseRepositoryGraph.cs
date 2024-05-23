@@ -1,4 +1,5 @@
 ﻿using UniverseCreation.API.Adapter.Out.DataAccess;
+using UniverseCreation.API.Application.Domain.Model;
 
 namespace UniverseCreation.API.Adapter.Out.Repository
 {
@@ -33,6 +34,27 @@ namespace UniverseCreation.API.Adapter.Out.Repository
             }
 
             return universe;
+        }
+
+        public async Task<bool> CreateUniverseNode(UniverseForCreationDto universe)
+        {
+            string universeName = universe.Name;
+            if (universeName != null && !string.IsNullOrWhiteSpace(universeName))
+            {
+                var query = @"CREATE (universe: Universe{name: $universeName})";
+
+                IDictionary<string, object> parameters = new Dictionary<string, object> {
+                    { "universeName", universeName }
+                };
+
+                _logger.LogInformation($"The universe with the name {universeName} has been created successfully in graph database");
+
+                return await _neo4JDataAccess.ExecuteWriteTransactionAsync<bool>(query, parameters);
+            }
+            else
+            {
+                throw new System.ArgumentNullException(nameof(universeName), "The name of the universe must not be null");
+            }
         }
     }
 }
