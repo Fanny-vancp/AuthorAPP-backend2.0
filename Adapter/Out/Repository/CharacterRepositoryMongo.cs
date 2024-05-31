@@ -129,6 +129,49 @@ namespace UniverseCreation.API.Adapter.Out.Repository
             }
         }
 
+        public async Task<String> InsertCharacter(CharacterForCreationDto character)
+        {
+            try
+            {
+                _logger.LogInformation("Creating a new character.");
+                BsonArray images = new BsonArray();
+                BsonArray relation = new BsonArray();
+                BsonArray physical_characteristic = new BsonArray();
+                BsonArray identity = new BsonArray();
+                BsonArray personnality = new BsonArray();
+                BsonArray aptitude = new BsonArray();
+
+
+                var document = new BsonDocument
+                {
+                    { "last_name", "" },
+                    { "first_name", "" },
+                    { "pseudo", character.Pseudo },
+                    { "images", images },
+                    { "identity", identity },
+                    { "physical_characteristic", physical_characteristic },
+                    { "relation", relation },
+                    { "personnality", personnality },
+                    { "aptitude", aptitude },
+                    { "historic", "" }
+                };
+
+                await _collection.InsertOneAsync(document);
+
+                var characterId = document["_id"].AsObjectId.ToString();
+                _logger.LogInformation("Successfully created character with ID: {CharacterId}", characterId);
+
+                return characterId;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while creating a character.");
+                throw;
+            }
+        }
+
+
+
         private CharacterDto ConvertBsonToCharacter(BsonDocument document)
         {
             if (document == null) return null;
@@ -166,11 +209,7 @@ namespace UniverseCreation.API.Adapter.Out.Repository
                     Title = pc["title"].AsString,
                     Value = pc["value"].AsString
                 }).ToList(),
-                Relation = document["relation"].AsBsonArray.Select(relation => new RelationInfo
-                {
-                    Relationship = relation["relationship"].AsString,
-                    Name = relation["name"].AsString
-                }).ToList(),
+                Relation = document["relation"].AsBsonArray.Select(relation => relation.AsString).ToList(),
                 Personnality = document["personnality"].AsBsonArray.Select(personality => personality.AsString).ToList(),
                 Aptitude = document["aptitude"].AsBsonArray.Select(aptitude => aptitude.AsString).ToList(),
                 Historic = document["historic"].AsString

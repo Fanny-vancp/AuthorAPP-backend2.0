@@ -27,10 +27,16 @@ namespace UniverseCreation.API.Application.Domain.Service
 
         public async Task<List<CharacterNodeDto>> FindAllCharactersFromFamilyTree(string family_treeName)
         {
-            /*var characters = await _characterPersistance.GetAllCharactersFromFamilyTree(family_treeName);
-            return characters;*/
-
             var characters = await _characterPersistance.GetAllCharactersFromFamilyTree(family_treeName);
+            var characterNodeDtos = await transformCharacterInCharacterNodeDto(characters, family_treeName);
+
+            characterNodeDtos = characterNodeDtos.OrderBy(c => c.level).ToList();
+
+            return characterNodeDtos;
+        }
+
+        private async Task<List<CharacterNodeDto>> transformCharacterInCharacterNodeDto(List<Dictionary<string, object>> characters, string family_treeName)
+        {
             var characterNodeDtos = new List<CharacterNodeDto>();
 
             foreach (var character in characters)
@@ -65,8 +71,6 @@ namespace UniverseCreation.API.Application.Domain.Service
                 characterNodeDtos.Add(characterNodeDto);
             }
 
-            characterNodeDtos = characterNodeDtos.OrderBy(c => c.level).ToList();
-
             return characterNodeDtos;
         }
 
@@ -80,14 +84,18 @@ namespace UniverseCreation.API.Application.Domain.Service
             return await _characterPersistance.DisconnectCharacterToFamilyTree(familyTreeName, characterName);
         }
 
-        public async Task<bool> InsertRelationBetweenCharacters(string characterName1, string characterName2, string relationDescription)
+        public async Task<bool> InsertRelationBetweenCharacters(string characterName1, string characterName2, string relationDescription, string familyTreeName)
         {
-            return await _characterPersistance.ConnectTwoCharacters(characterName1, characterName2, relationDescription);
+            var characters = await _characterPersistance.GetAllCharactersFromFamilyTree(familyTreeName);
+            var characterNodeDtos = await transformCharacterInCharacterNodeDto(characters, familyTreeName);
+            return await _characterPersistance.ConnectTwoCharacters(characterName1, characterName2, relationDescription, characterNodeDtos, familyTreeName);
         }
 
-        public async Task<bool> RemoveRelationBetweenCharacters(string characterName1, string characterName2)
+        public async Task<bool> RemoveRelationBetweenCharacters(string characterName1, string characterName2, string familyTreeName)
         {
-            return await _characterPersistance.DisconnectTwoCharacters(characterName1, characterName2);
+            var characters = await _characterPersistance.GetAllCharactersFromFamilyTree(familyTreeName);
+            var characterNodeDtos = await transformCharacterInCharacterNodeDto(characters, familyTreeName);
+            return await _characterPersistance.DisconnectTwoCharacters(characterName1, characterName2, familyTreeName, characterNodeDtos);
         }
 
         public async Task<bool> UpdateRelationBetweenCharacters(string characterName1, string characterName2, string relationDescription)
@@ -111,6 +119,11 @@ namespace UniverseCreation.API.Application.Domain.Service
         {
             var character = await _characterPersistance.GetCharacterById(idCharacter);
             return character;
+        }
+
+        public async Task<bool> CreateNewCharacter(string idUniverse, CharacterForCreationDto character)
+        {
+            return await _characterPersistance.AddNewCharacter(idUniverse, character);
         }
     }
 }

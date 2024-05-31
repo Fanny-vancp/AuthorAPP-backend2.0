@@ -1,4 +1,5 @@
-﻿using UniverseCreation.API.Adapter.Out.DataAccess;
+﻿using Amazon.Runtime.Internal.Transform;
+using UniverseCreation.API.Adapter.Out.DataAccess;
 using UniverseCreation.API.Application.Domain.Model;
 
 namespace UniverseCreation.API.Adapter.Out.Repository
@@ -54,6 +55,36 @@ namespace UniverseCreation.API.Adapter.Out.Repository
             else
             {
                 throw new System.ArgumentNullException(nameof(universeName), "The name of the universe must not be null");
+            }
+        }
+
+        public async Task<bool> AddCharacterToUniverse(CharacterForCreationDto character)
+        {
+            string universeName = character.UniverseName;
+            string characterName = character.Pseudo;
+            if ((universeName != null && !string.IsNullOrWhiteSpace(universeName)) && 
+                    (characterName != null && !string.IsNullOrWhiteSpace(characterName)))
+            {
+                var query = @"MATCH (universe: Universe {name: $universeName}),
+	                        (character: Character {name: $characterName})
+                            CREATE (character)-[:CAST_FROM]->(universe)";
+
+                IDictionary<string, object> parameters = new Dictionary<string, object> {
+                    { "universeName", universeName },
+                    { "characterName", characterName }
+                };
+
+                _logger.LogInformation($"The universe with the name {universeName} has been created successfully in graph database");
+
+                return await _neo4JDataAccess.ExecuteWriteTransactionAsync<bool>(query, parameters);
+            }
+            else if (universeName == null)
+            {
+                throw new System.ArgumentNullException(nameof(universeName), "The name of the universe must not be null");
+            }
+            else
+            {
+                throw new System.ArgumentNullException(nameof(characterName), "The name of the character must not be null");
             }
         }
     }

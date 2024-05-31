@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using UniverseCreation.API.Adapter.Out.Repository;
 using UniverseCreation.API.DataStore.ModelDto;
-using UniverseCreation.API.DataStore;
 using UniverseCreation.API.Application.Domain.Model;
 using UniverseCreation.API.Application.Port.In;
 using Swashbuckle.AspNetCore.Annotations;
@@ -74,6 +73,29 @@ namespace UniverseCreation.API.Adapter.In.Controllers
                     "A problem happened while handling your request.");
             }
             
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddNewCharacter(string universe,
+            [FromBody] CharacterForCreationDto character)
+        {
+            try
+            {
+                await _characterService.CreateNewCharacter(universe, character);
+                return Ok();
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogInformation(ex.Message);
+                return NotFound(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical($"Exception while creating a new character with the name {character.Pseudo} int the universe with the id {universe}",
+                    ex);
+                return StatusCode(500,
+                    "A problem happened while handling your request.");
+            }
         }
 
 
@@ -154,7 +176,7 @@ namespace UniverseCreation.API.Adapter.In.Controllers
             try
             {
                 await _characterService.InsertRelationBetweenCharacters(relationForCreationDto.StratPoint, 
-                    relationForCreationDto.EndPoint, relationForCreationDto.descriptionRelation);
+                    relationForCreationDto.EndPoint, relationForCreationDto.descriptionRelation, family_treeName);
                 return Ok();
             }
             catch (InvalidOperationException ex)
@@ -176,7 +198,7 @@ namespace UniverseCreation.API.Adapter.In.Controllers
         {
             try
             {
-                await _characterService.RemoveRelationBetweenCharacters(characterName1, characterName2);
+                await _characterService.RemoveRelationBetweenCharacters(characterName1, characterName2, family_treeName);
                 return Ok();
             }
             catch (InvalidOperationException ex)

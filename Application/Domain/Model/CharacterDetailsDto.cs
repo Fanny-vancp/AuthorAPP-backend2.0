@@ -28,7 +28,7 @@ namespace UniverseCreation.API.Application.Domain.Model
         public List<PhysicalCharacteristic> PhysicalCharacteristic { get; set; }
 
         [BsonElement("relation")]
-        public List<RelationInfo> Relation { get; set; }
+        public List<string> Relation { get; set; }
 
         [BsonElement("personnality")]
         public List<string> Personnality { get; set; }

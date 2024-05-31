@@ -1,4 +1,5 @@
 ﻿using UniverseCreation.API.Adapter.Out.DataAccess;
+using UniverseCreation.API.Application.Domain.Model;
 using UniverseCreation.API.Application.Port.Out;
 
 namespace UniverseCreation.API.Adapter.Out.Repository
@@ -165,6 +166,29 @@ namespace UniverseCreation.API.Adapter.Out.Repository
             return await _neo4JDataAccess.ExecuteWriteTransactionAsync<bool>(query, parameters);
         }
 
+        // Getting a relation RELATIVE_TO between two characters
+        public async Task<List<Dictionary<string, object>>> MatchRelationBetweenCharacters(string characterName1, string characterName2)
+        {
+            var query = @"MATCH (c1:Character {name: $characterName1})-[relation:RELATIVE_TO]->(c2:Character {name: $characterName2})
+                        RETURN relation";
+
+            IDictionary<string, object> parameters = new Dictionary<string, object> {
+                    { "characterName1", characterName1 },
+                    { "characterName2", characterName2 }
+            };
+
+            _logger.LogInformation($"Relation between '{characterName1}' and '{characterName2}' have been find successfully");
+
+            var relation = await _neo4JDataAccess.ExecuteReadDictionaryAsync(query, "relation", parameters);
+
+            if (relation != null && relation.Count == 0)
+            {
+                relation = null;
+            }
+
+            return relation;
+        }
+
         // Deleting a Relation RELATIVE_TO between two Characters
         public async Task<bool> DeleteRelationBetweenCharacters(string characterName1, string characterName2)
         {
@@ -233,6 +257,45 @@ namespace UniverseCreation.API.Adapter.Out.Repository
             var relationLevel = await _neo4JDataAccess.ExecuteReadDictionaryAsync(query, "relation", parameters);
 
             return relationLevel;
+        }
+
+        // create a new node character
+        public async Task<bool> CreateCharacterNode(CharacterForCreationDto character)
+        {
+            string characterPseudo = character.Pseudo;
+            if (characterPseudo != null && !string.IsNullOrWhiteSpace(characterPseudo))
+            {
+                var query = @"CREATE (character: Character{name: $characterPseudo})";
+
+                IDictionary<string, object> parameters = new Dictionary<string, object> {
+                    { "characterPseudo", characterPseudo }
+                };
+
+                _logger.LogInformation($"The character with the name {characterPseudo} has been created successfully in graph database");
+
+                return await _neo4JDataAccess.ExecuteWriteTransactionAsync<bool>(query, parameters);
+            }
+            else
+            {
+                throw new System.ArgumentNullException(nameof(characterPseudo), "The name of the character must not be null");
+            }
+        }
+
+        // Setting a level of a character from a family tree
+        public async Task<bool> SetLevelFamilyFrom(string characterName, string familyTreeName, int level)
+        {
+            var query = @"MATCH (c:Character {name: $characterName})-[r:FAMILY_FROM]->(FamilyTree {name: $familyTreeName})
+                        SET r.level = $level";
+
+            IDictionary<string, object> parameters = new Dictionary<string, object> {
+                    { "characterName", characterName },
+                    { "familyTreeName", familyTreeName },
+                    { "level", level }
+            };
+
+            _logger.LogInformation($"Level of the character {characterName} and the familyTree {familyTreeName} have been updated successfully");
+
+            return await _neo4JDataAccess.ExecuteWriteTransactionAsync<bool>(query, parameters);
         }
     }
 }

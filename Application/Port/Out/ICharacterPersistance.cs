@@ -9,13 +9,14 @@ namespace UniverseCreation.API.Application.Port.Out
         Task<List<Dictionary<string, object>>> GetCharacterFromString(string searchName, string universeName);
         Task<bool> ConnectCharacterToFamilyTree(string familyTreeName, string characterName);
         Task<bool> DisconnectCharacterToFamilyTree(string familyTreeName, string characterName);
-        Task<bool> ConnectTwoCharacters(string characterName1, string characterName2, string relationDescription);
-        Task<bool> DisconnectTwoCharacters(string characterName1, string  characterName2);
+        Task<bool> ConnectTwoCharacters(string characterName1, string characterName2, string relationDescription, List<CharacterNodeDto> characters, string familyTreeName);
+        Task<bool> DisconnectTwoCharacters(string characterName1, string  characterName2, string familyTreeName, List<CharacterNodeDto> characters);
         Task<bool> FixRelationBetweenCharacters(string characterName1, string characterName2, string relationDescription);
         Task<List<Dictionary<string, object>>> GetAllRelationForCharacter(string characterName, string relationDescription);
         Task<List<Dictionary<string, object>>> GetLevelFamilyTreeForCharacter(string characterName, string familyTree);
 
         Task<List<CharacterDto>> GetAllCharacters(string universeId);
         Task<CharacterDetailsDto> GetCharacterById(string characterId);
+        Task<bool> AddNewCharacter(string idUniverse, CharacterForCreationDto character);
     }
 }
