@@ -170,7 +170,53 @@ namespace UniverseCreation.API.Adapter.Out.Repository
             }
         }
 
+        public async Task<bool> UpdateCharacter(CharacterDetailsDto character)
+        {
+            try
+            {
+                _logger.LogInformation("Updating character with ID: {CharacterId}", character.Id);
 
+                var filter = Builders<BsonDocument>.Filter.Eq("_id", new ObjectId(character.Id));
+
+                var update = Builders<BsonDocument>.Update
+                    .Set("last_name", character.LastName)
+                    .Set("first_name", character.FirstName)
+                    .Set("pseudo", character.Pseudo)
+                    .Set("images", new BsonArray(character.Images))
+                    .Set("identity", new BsonArray(character.Identity.Select(identity =>
+                        new BsonDocument
+                        {
+                    { "title", identity.Title },
+                    { "value", identity.Value }
+                        })))
+                    .Set("physical_characteristic", new BsonArray(character.PhysicalCharacteristic.Select(pc =>
+                        new BsonDocument
+                        {
+                    { "title", pc.Title },
+                    { "value", pc.Value }
+                        })))
+                    .Set("relation", new BsonArray(character.Relation))
+                    .Set("personnality", new BsonArray(character.Personnality))
+                    .Set("aptitude", new BsonArray(character.Aptitude))
+                    .Set("historic", character.Historic);
+
+                var result = await _collection.UpdateOneAsync(filter, update);
+
+                if (result.ModifiedCount == 0)
+                {
+                    _logger.LogWarning("No character found with ID: {CharacterId} to update.", character.Id);
+                    return false;
+                }
+
+                _logger.LogInformation("Successfully updated character with ID: {CharacterId}", character.Id);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while updating character with ID: {CharacterId}", character.Id);
+                throw;
+            }
+        }
 
         private CharacterDto ConvertBsonToCharacter(BsonDocument document)
         {

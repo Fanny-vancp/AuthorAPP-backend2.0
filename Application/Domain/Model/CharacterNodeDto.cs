@@ -8,6 +8,7 @@
         public List<string> married { get; set; }
         public List<string> divorced { get; set; }
         public List<string> couple { get; set; }
+        public List<string> amant { get; set; }
         public required int level { get; set; }
     }
 }

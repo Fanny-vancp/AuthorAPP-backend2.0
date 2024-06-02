@@ -41,5 +41,10 @@ namespace UniverseCreation.API.Adapter.Out.Persistance
 
             return await _familyTreeRepositoryGraph.CreateFamilyTree(universeName, familyTreeName);
         }
+
+        public async Task<bool> CancelFamilyTree(string familyTreeName)
+        {
+            return await _familyTreeRepositoryGraph.DeleteFamilyTree(familyTreeName);
+        }
     }
 }

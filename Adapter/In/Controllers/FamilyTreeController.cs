@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using UniverseCreation.API.Adapter.Out.Repository;
 using UniverseCreation.API.Application.Domain.Model;
+using UniverseCreation.API.Application.Domain.Service;
 using UniverseCreation.API.Application.Port.In;
 
 namespace UniverseCreation.API.Adapter.In.Controllers
@@ -59,6 +60,28 @@ namespace UniverseCreation.API.Adapter.In.Controllers
             catch (Exception ex)
             {
                 _logger.LogCritical($"Exception while creating family tree for universe with the name : {universe}.",
+                    ex);
+                return StatusCode(500,
+                    "A problem happened while handling your request.");
+            }
+        }
+
+        [HttpDelete("{familyTreeName}")]
+        public async Task<IActionResult> DeleteRelationBetweenCharacter(string familyTreeName, string universe)
+        {
+            try
+            {
+                await _familyTreeService.RemoveFamilyTree(familyTreeName);
+                return Ok();
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogInformation(ex.Message);
+                return NotFound(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical($"Exception while removing familyTree : {familyTreeName} in the universe {universe}.",
                     ex);
                 return StatusCode(500,
                     "A problem happened while handling your request.");

@@ -16,6 +16,7 @@ namespace UniverseCreation.API.Application.Port.In
 
         Task<List<CharacterDto>> FindAllCharacters(string idUniverse);
         Task<CharacterDetailsDto> FindCharacterById(string idCharacter);
-        Task<bool> CreateNewCharacter(string idUniverse,CharacterForCreationDto character);
+        Task<bool> CreateNewCharacter(string idUniverse, CharacterForCreationDto character);
+        Task<bool> ChangeCharacter(CharacterDetailsDto character, string characterName);
     }
 }

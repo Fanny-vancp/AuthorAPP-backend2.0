@@ -18,5 +18,6 @@ namespace UniverseCreation.API.Application.Port.Out
         Task<List<CharacterDto>> GetAllCharacters(string universeId);
         Task<CharacterDetailsDto> GetCharacterById(string characterId);
         Task<bool> AddNewCharacter(string idUniverse, CharacterForCreationDto character);
+        Task<bool> ReformCharacter(CharacterDetailsDto character, string characterName);
     }
 }

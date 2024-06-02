@@ -18,9 +18,16 @@ namespace UniverseCreation.API.Application.Domain.Service
             return families_trees;
         }
 
-        public async Task<bool> AddFamilyTree(string familyTreeName, string characterName)
+        public async Task<bool> AddFamilyTree(string familyTreeName, string universeName)
         {
-            return await _familyTreePersistance.InsertNewFamilyTree(familyTreeName, characterName);
+            return await _familyTreePersistance.InsertNewFamilyTree(familyTreeName, universeName);
+        }
+
+        public async Task<bool> RemoveFamilyTree(string familyTreeName)
+        {
+            return await _familyTreePersistance.CancelFamilyTree(familyTreeName);
         }
     }
+
+
 }

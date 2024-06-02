@@ -304,6 +304,28 @@ namespace UniverseCreation.API.Adapter.In.Controllers
             }
         }
 
+        [HttpPatch("/api/characters/{characterName}")]
+        public async Task<IActionResult> PatchCharacter(string characterName, [FromBody] CharacterDetailsDto characterDetails)
+        {
+            try
+            {
+                await _characterService.ChangeCharacter(characterDetails, characterName);
+                return Ok();
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogInformation(ex.Message);
+                return NotFound(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical($"Exception while updating character with the name {characterName}.",
+                    ex);
+                return StatusCode(500,
+                    "A problem happened while handling your request.");
+            }
+        }
+
 
 
         /*[HttpGet("details")]

@@ -48,13 +48,15 @@ namespace UniverseCreation.API.Application.Domain.Service
                 var marriedDict = await _characterPersistance.GetAllRelationForCharacter(characterName, "Marrié");
                 var divorcedDict = await _characterPersistance.GetAllRelationForCharacter(characterName, "Divorcé");
                 var coupleDict = await _characterPersistance.GetAllRelationForCharacter(characterName, "En couple");
+                var amantDict = await _characterPersistance.GetAllRelationForCharacter(characterName, "Amant");
                 var levelDict = await _characterPersistance.GetLevelFamilyTreeForCharacter(characterName, family_treeName);
 
                 var children = childrenDict.Select(child => child["name"].ToString()).ToList();
                 var parents = parentsDict.Select(parent => parent["name"].ToString()).ToList();
                 var married = marriedDict.Select(marriage => marriage["name"].ToString()).ToList();
-                var divorced = marriedDict.Select(divorce => divorce["name"].ToString()).ToList();
-                var couple = marriedDict.Select(couple => couple["name"].ToString()).ToList();
+                var divorced = divorcedDict.Select(divorce => divorce["name"].ToString()).ToList();
+                var couple = coupleDict.Select(couple => couple["name"].ToString()).ToList();
+                var amant = amantDict.Select(couple => couple["name"].ToString()).ToList();
                 var level = levelDict.Select(level => Convert.ToInt32(level["level"])).FirstOrDefault();
 
                 var characterNodeDto = new CharacterNodeDto
@@ -65,6 +67,7 @@ namespace UniverseCreation.API.Application.Domain.Service
                     married = married,
                     divorced = divorced,
                     couple = couple,
+                    amant = amant,
                     level = level,
                 };
 
@@ -124,6 +127,11 @@ namespace UniverseCreation.API.Application.Domain.Service
         public async Task<bool> CreateNewCharacter(string idUniverse, CharacterForCreationDto character)
         {
             return await _characterPersistance.AddNewCharacter(idUniverse, character);
+        }
+
+        public async Task<bool> ChangeCharacter( CharacterDetailsDto character, string characterName)
+        {
+            return await _characterPersistance.ReformCharacter(character, characterName);
         }
     }
 }

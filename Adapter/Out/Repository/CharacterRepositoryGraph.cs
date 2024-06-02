@@ -297,5 +297,21 @@ namespace UniverseCreation.API.Adapter.Out.Repository
 
             return await _neo4JDataAccess.ExecuteWriteTransactionAsync<bool>(query, parameters);
         }
+
+        // Setting a name of a character
+        public async Task<bool> SetCharacterName(string characterName, string newCharacterName)
+        {
+            var query = @"MATCH (character:Character {name: $characterName})
+                        SET character.name = $newCharacterName";
+
+            IDictionary<string, object> parameters = new Dictionary<string, object> {
+                    { "characterName", characterName },
+                    { "newCharacterName", newCharacterName }
+            };
+
+            _logger.LogInformation($"The name of the character {characterName} have been updated with the name {newCharacterName} successfully");
+
+            return await _neo4JDataAccess.ExecuteWriteTransactionAsync<bool>(query, parameters);
+        }
     }
 }

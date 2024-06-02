@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("UniverseCreation.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d7cb3404bea188726a1adc4d8905c7c3b7b74192")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+793ccdefcb6055ad70852bc671706adfe2bd7568")]
 [assembly: System.Reflection.AssemblyProductAttribute("UniverseCreation.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("UniverseCreation.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

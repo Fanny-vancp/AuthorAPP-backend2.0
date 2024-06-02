@@ -147,6 +147,7 @@ namespace UniverseCreation.API.Adapter.Out.Persistance
 
             if (relationDescription == "Enfant" || relationDescription == "Parent")
             {
+                Console.WriteLine("Relation Enfant- parent");
                 CharacterNodeDto characterParent;
                 CharacterNodeDto characterEnfant;
                 if (relationDescription == "Parent") {
@@ -157,6 +158,8 @@ namespace UniverseCreation.API.Adapter.Out.Persistance
                     characterParent = characters.FirstOrDefault(node => node.name == characterName2);
                     characterEnfant = characters.FirstOrDefault(node => node.name == characterName1);
                 }
+                Console.WriteLine("Enfant = " + characterEnfant.name);
+                Console.WriteLine("Parent = " + characterParent.name);
 
                 // creation of a parent-children relation
                 if (characterEnfant.parents != null && characterEnfant.parents.Count >= 2)
@@ -167,42 +170,43 @@ namespace UniverseCreation.API.Adapter.Out.Persistance
                         // the character already had two parents in the same familyTree
                         return false;
                     }
+                }
 
-                    if (characterEnfant.level == -1)
-                    {
-                        int newLevel = characterParent.level + 1;
-                        await _characterRepositoryGraph.SetLevelFamilyFrom(characterEnfant.name, familyTreeName, newLevel);
-                        var relationCreated1 = await _characterRepositoryGraph.CreateRelationBetweenCharacters(characterEnfant.name, characterParent.name, "Enfant");
-                        var relationCreated2 = await _characterRepositoryGraph.CreateRelationBetweenCharacters(characterParent.name, characterEnfant.name, "Parent");
+                if (characterEnfant.level == -1)
+                {
+                    int newLevel = characterParent.level + 1;
+                    //await _characterRepositoryGraph.SetLevelFamilyFrom(characterEnfant.name, familyTreeName, newLevel);
+                    await SetLevelToAllDescendant(characterEnfant, characters, familyTreeName, newLevel);
+                    var relationCreated1 = await _characterRepositoryGraph.CreateRelationBetweenCharacters(characterEnfant.name, characterParent.name, "Enfant");
+                    var relationCreated2 = await _characterRepositoryGraph.CreateRelationBetweenCharacters(characterParent.name, characterEnfant.name, "Parent");
 
-                        if (relationCreated1 == true && relationCreated2 == true) { return true; }
-                        else { return false; }
-                    }
-                    else if (characterParent.level == -1)
-                    {
-                        if (characterEnfant.level == 0)
-                        {
-                            foreach (var character in characters)
-                            {
-                                if (character.level != -1)
-                                {
-                                    int newLevel = character.level + 1;
-                                    await _characterRepositoryGraph.SetLevelFamilyFrom(character.name, familyTreeName, character.level);
-                                }
-                            }
-                            await _characterRepositoryGraph.SetLevelFamilyFrom(characterEnfant.name, familyTreeName, 0);
-                        }
-                        else { return false; }
-
-                        var relationCreated1 = await _characterRepositoryGraph.CreateRelationBetweenCharacters(characterEnfant.name, characterParent.name, "Enfant");
-                        var relationCreated2 = await _characterRepositoryGraph.CreateRelationBetweenCharacters(characterParent.name, characterEnfant.name, "Parent");
-
-                        if (relationCreated1 == true && relationCreated2 == true) { return true; }
-                        else { return false; }
-
-                    }
+                    if (relationCreated1 == true && relationCreated2 == true) { return true; }
                     else { return false; }
                 }
+                else if (characterParent.level == -1)
+                {
+                    if (characterEnfant.level == 0)
+                    {
+                        foreach (var character in characters)
+                        {
+                            if (character.level != -1)
+                            {
+                                int newLevel = character.level + 1;
+                                await _characterRepositoryGraph.SetLevelFamilyFrom(character.name, familyTreeName, character.level);
+                            }
+                        }
+                        await _characterRepositoryGraph.SetLevelFamilyFrom(characterEnfant.name, familyTreeName, 0);
+                    }
+                    else { return false; }
+
+                    var relationCreated1 = await _characterRepositoryGraph.CreateRelationBetweenCharacters(characterEnfant.name, characterParent.name, "Enfant");
+                    var relationCreated2 = await _characterRepositoryGraph.CreateRelationBetweenCharacters(characterParent.name, characterEnfant.name, "Parent");
+
+                    if (relationCreated1 == true && relationCreated2 == true) { return true; }
+                    else { return false; }
+
+                }
+                else { return false; }
             }
 
             // creation of a relation married-divoced-couple-amant
@@ -278,7 +282,21 @@ namespace UniverseCreation.API.Adapter.Out.Persistance
 
                 if (childNode != null)
                 {
-                    _ = SetLevelToAllDescendantInStack(childNode, characters, familyTreeName);
+                    // check if the child had two parents in the tree
+                    int validParentCount = 0;
+
+                    foreach (var character in characters)
+                    {
+                        if ((character.children.Contains(childCharacter)) && character.level != -1)
+                        {
+                            validParentCount++;
+                        }
+                    }
+
+                    if (validParentCount == 1)
+                    {
+                        await SetLevelToAllDescendantInStack(childNode, characters, familyTreeName);
+                    }
                 }
                 
                 // remove the two relation
@@ -340,7 +358,7 @@ namespace UniverseCreation.API.Adapter.Out.Persistance
                             }
                         }
                     }
-                    await _characterRepositoryGraph.SetLevelFamilyFrom(characterToRemove.name, familyTreeName, -1);
+                    _ = await _characterRepositoryGraph.SetLevelFamilyFrom(characterToRemove.name, familyTreeName, -1);
                 }
 
                 // remove the two relation
@@ -507,10 +525,31 @@ namespace UniverseCreation.API.Adapter.Out.Persistance
         public async Task<bool> AddNewCharacter(string idUniverse, CharacterForCreationDto character)
         {
             string idCharacter = await _characterRepositoryMongo.InsertCharacter(character);
-            await _universeRepositoryMongo.AddCharacterToUniverse(idUniverse, idCharacter);
+            var addCharacter = await _universeRepositoryMongo.AddCharacterToUniverse(idUniverse, idCharacter);
 
-            await _characterRepositoryGraph.CreateCharacterNode(character);
-            return await _universeRepositoryGraph.AddCharacterToUniverse(character);
+            var addNodeCharacter = await _characterRepositoryGraph.CreateCharacterNode(character);
+            var AddCharacterToUniverse = await _universeRepositoryGraph.AddCharacterToUniverse(character);
+
+            if(addCharacter == true && addNodeCharacter == true && AddCharacterToUniverse == true) { return true; }
+            else { return false; }
+        }
+
+        public async Task<bool> ReformCharacter(CharacterDetailsDto character, string characterName)
+        {
+            var updateCharacter = await _characterRepositoryMongo.UpdateCharacter(character);
+            string characterDetailsName = character.FirstName + " " + character.LastName;
+
+            Console.WriteLine($"Name : {characterName}");
+            Console.WriteLine($"New name : {characterDetailsName}");
+            var updateNameCharacter = true;
+            if (characterDetailsName != characterName)
+            {
+                Console.WriteLine("changement name");
+                updateNameCharacter = await _characterRepositoryGraph.SetCharacterName(characterName, characterDetailsName);
+            }
+
+            if (updateCharacter == true && updateNameCharacter == true) { return true; }
+            else { return false; }
         }
     }
 }

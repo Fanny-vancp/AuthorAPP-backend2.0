@@ -2,12 +2,6 @@
 
 namespace UniverseCreation.API.Adapter.Out.Repository
 {
-   /* public interface IFamilyTreeRepositoryGraph
-    {
-        Task<List<Dictionary<string, object>>> MatchAllFamilyTreeByUniverseName(string universeName);
-        Task<bool> AddNewFamilyTree(string universeName, string familyTreeName);
-        Task<List<Dictionary<string, object>>> FindFamilyTree(string universeName);
-    }*/
     public class FamilyTreeRepositoryGraph 
     {
         private INeo4jDataAccess _neo4JDataAccess;
@@ -72,6 +66,21 @@ namespace UniverseCreation.API.Adapter.Out.Repository
             }
 
             return universe;
+        }
+
+        // delete a family free
+        public async Task<bool> DeleteFamilyTree(string familyTreeName)
+        {
+            var query = @"MATCH (familyTree:FamilyTree {name: $familyTreeName})
+                        DETACH DELETE familyTree";
+
+            IDictionary<string, object> parameters = new Dictionary<string, object> {
+                { "familyTreeName", familyTreeName }
+            };
+
+            _logger.LogInformation($"Family tree '{familyTreeName}' deleted successfully");
+
+            return await _neo4JDataAccess.ExecuteWriteTransactionAsync<bool>(query, parameters);
         }
     }
 }
