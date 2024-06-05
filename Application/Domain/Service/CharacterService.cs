@@ -30,6 +30,12 @@ namespace UniverseCreation.API.Application.Domain.Service
             var characters = await _characterPersistance.GetAllCharactersFromFamilyTree(family_treeName);
             var characterNodeDtos = await transformCharacterInCharacterNodeDto(characters, family_treeName);
 
+            if ((characterNodeDtos.Count == 1) && (characterNodeDtos[0].level == -1)) 
+            {
+                characterNodeDtos[0].level = 0;
+                await _characterPersistance.SetLevelCharacter(characterNodeDtos[0].name, family_treeName, 0);
+            }
+
             characterNodeDtos = characterNodeDtos.OrderBy(c => c.level).ToList();
 
             return characterNodeDtos;
@@ -132,6 +138,21 @@ namespace UniverseCreation.API.Application.Domain.Service
         public async Task<bool> ChangeCharacter( CharacterDetailsDto character, string characterName)
         {
             return await _characterPersistance.ReformCharacter(character, characterName);
+        }
+
+        public async Task<bool> DeleteCharacter(string universeId, string characterId)
+        {
+            var character = await _characterPersistance.GetCharacterById(characterId);
+
+            string characterName;
+            if (character.FirstName == "")
+            {
+                characterName = character.Pseudo;
+            } else
+            {
+                characterName = character.FirstName + " " + character.LastName;
+            }
+            return await _characterPersistance.RemoveCharacter( universeId, characterId, characterName);
         }
     }
 }

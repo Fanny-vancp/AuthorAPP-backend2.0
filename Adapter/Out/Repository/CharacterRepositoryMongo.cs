@@ -261,5 +261,32 @@ namespace UniverseCreation.API.Adapter.Out.Repository
                 Historic = document["historic"].AsString
             };
         }
+
+        public async Task<bool> DeleteCharacterById(string characterId)
+        {
+            try
+            {
+                _logger.LogInformation("Deleting character with ID: {CharacterId}", characterId);
+
+                var filter = Builders<BsonDocument>.Filter.Eq("_id", new ObjectId(characterId));
+
+                var result = await _collection.DeleteOneAsync(filter);
+
+                if (result.DeletedCount == 0)
+                {
+                    _logger.LogWarning("No character found with ID: {CharacterId} to delete.", characterId);
+                    return false;
+                }
+
+                _logger.LogInformation("Successfully deleted character with ID: {CharacterId}", characterId);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while deleting character with ID: {CharacterId}", characterId);
+                throw;
+            }
+        }
+
     }
 }

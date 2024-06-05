@@ -161,5 +161,32 @@ namespace UniverseCreation.API.Adapter.Out.Repository
                 }).ToList()
             };
         }
+
+        public async Task<bool> RemoveCharacterFromUniverse(string universeId, string characterId)
+        {
+            try
+            {
+                _logger.LogInformation("Removing character with ID {CharacterId} from universe with ID {UniverseId}", characterId, universeId);
+
+                var filter = Builders<BsonDocument>.Filter.Eq("_id", new ObjectId(universeId));
+                var update = Builders<BsonDocument>.Update.Pull("characters", new BsonDocument("character_id", new ObjectId(characterId)));
+
+                var result = await _collection.UpdateOneAsync(filter, update);
+
+                if (result.ModifiedCount == 0)
+                {
+                    _logger.LogWarning("No universe found with ID: {UniverseId}", universeId);
+                    return false;
+                }
+
+                _logger.LogInformation("Successfully removed character with ID {CharacterId} from universe with ID {UniverseId}", characterId, universeId);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while removing character from universe.");
+                return false;
+            }
+        }
     }
 }

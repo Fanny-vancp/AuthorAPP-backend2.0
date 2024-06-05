@@ -91,7 +91,29 @@ namespace UniverseCreation.API.Adapter.In.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogCritical($"Exception while creating a new character with the name {character.Pseudo} int the universe with the id {universe}",
+                _logger.LogCritical($"Exception while creating a new character with the name {character.Pseudo} in the universe with the id {universe}",
+                    ex);
+                return StatusCode(500,
+                    "A problem happened while handling your request.");
+            }
+        }
+
+        [HttpDelete("{characterId}")]
+        public async Task<IActionResult> DeleteCharacter(string universe, string characterId) 
+        {
+            try
+            {
+                await _characterService.DeleteCharacter(universe, characterId);
+                return Ok();
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogInformation(ex.Message);
+                return NotFound(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical($"Exception while deleting a character with the id {characterId} in the universe with the id {universe}",
                     ex);
                 return StatusCode(500,
                     "A problem happened while handling your request.");
@@ -99,15 +121,15 @@ namespace UniverseCreation.API.Adapter.In.Controllers
         }
 
 
-        [HttpGet("/api/families_trees/{family_treeName}/characters")]
+        [HttpGet("/api/families_trees/{familyTreeName}/characters")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<CharacterNodeDto>))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetAllCharactersByFamilyTreeNameNode(string family_treeName)
+        public async Task<IActionResult> GetAllCharactersByFamilyTreeNameNode(string familyTreeName)
         {
             try
             {
-                var characters = await _characterService.FindAllCharactersFromFamilyTree(family_treeName);
+                var characters = await _characterService.FindAllCharactersFromFamilyTree(familyTreeName);
                 return Ok(characters);
             }
             catch (InvalidOperationException ex)
@@ -117,7 +139,7 @@ namespace UniverseCreation.API.Adapter.In.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogCritical($"Exception while getting characters for the family name : {family_treeName}.",
+                _logger.LogCritical($"Exception while getting characters for the family name : {familyTreeName}.",
                     ex);
                 return StatusCode(500,
                     "A problem happened while handling your request.");
@@ -125,7 +147,7 @@ namespace UniverseCreation.API.Adapter.In.Controllers
         }
 
 
-        [HttpPost("/api/families_trees/{family_treeName}/characters")]
+        [HttpPost("/api/families_trees/{familyTreeName}/characters")]
         public async Task<IActionResult> AddCharacterInFamilyTree([FromBody] RelationForCreationDto relationForCreationDto)
         {
             try
@@ -147,12 +169,12 @@ namespace UniverseCreation.API.Adapter.In.Controllers
             }
         }
 
-        [HttpDelete("/api/families_trees/{family_treeName}/characters/{characterName}")]
-        public async Task<IActionResult> DeleteCharacterFromFamilyTree(string family_treeName, string characterName)
+        [HttpDelete("/api/families_trees/{familyTreeName}/characters/{characterName}")]
+        public async Task<IActionResult> DeleteCharacterFromFamilyTree(string familyTreeName, string characterName)
         {
             try
             {
-                await _characterService.RemoveCharacterToFamilyTree(family_treeName, characterName);
+                await _characterService.RemoveCharacterToFamilyTree(familyTreeName, characterName);
                 return Ok();
             }
             catch (InvalidOperationException ex)
@@ -162,21 +184,21 @@ namespace UniverseCreation.API.Adapter.In.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogCritical($"Exception while deleting characters from the family name : {family_treeName}.",
+                _logger.LogCritical($"Exception while deleting characters from the family name : {familyTreeName}.",
                     ex);
                 return StatusCode(500,
                     "A problem happened while handling your request.");
             }
         }
 
-        [HttpPost("/api/families_trees/{family_treeName}/characters/relation")]
-        public async Task<IActionResult> AddRelationBetweenCharacters(string family_treeName, 
+        [HttpPost("/api/families_trees/{familyTreeName}/characters/relation")]
+        public async Task<IActionResult> AddRelationBetweenCharacters(string familyTreeName, 
             [FromBody] RelationForCreationDto relationForCreationDto)
         {
             try
             {
                 await _characterService.InsertRelationBetweenCharacters(relationForCreationDto.StratPoint, 
-                    relationForCreationDto.EndPoint, relationForCreationDto.descriptionRelation, family_treeName);
+                    relationForCreationDto.EndPoint, relationForCreationDto.descriptionRelation, familyTreeName);
                 return Ok();
             }
             catch (InvalidOperationException ex)
@@ -186,19 +208,19 @@ namespace UniverseCreation.API.Adapter.In.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogCritical($"Exception while creating relation between two characters from the family name : {family_treeName}.",
+                _logger.LogCritical($"Exception while creating relation between two characters from the family name : {familyTreeName}.",
                     ex);
                 return StatusCode(500,
                     "A problem happened while handling your request.");
             }
         }
 
-        [HttpDelete("/api/families_trees/{family_treeName}/characters/{characterName1}/relation/{characterName2}")]
-        public async Task<IActionResult> DeleteRelationBetweenCharacter(string characterName1, string characterName2, string family_treeName)
+        [HttpDelete("/api/families_trees/{familyTreeName}/characters/{characterName1}/relation/{characterName2}")]
+        public async Task<IActionResult> DeleteRelationBetweenCharacter(string characterName1, string characterName2, string familyTreeName)
         {
             try
             {
-                await _characterService.RemoveRelationBetweenCharacters(characterName1, characterName2, family_treeName);
+                await _characterService.RemoveRelationBetweenCharacters(characterName1, characterName2, familyTreeName);
                 return Ok();
             }
             catch (InvalidOperationException ex)
@@ -208,15 +230,15 @@ namespace UniverseCreation.API.Adapter.In.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogCritical($"Exception while removing relation between two characters from the family name : {family_treeName}.",
+                _logger.LogCritical($"Exception while removing relation between two characters from the family name : {familyTreeName}.",
                     ex);
                 return StatusCode(500,
                     "A problem happened while handling your request.");
             }
         }
 
-        [HttpPatch("/api/families_trees/{family_treeName}/characters/relation")]
-        public async Task<IActionResult> PatchRelationBetweenCharacters(string family_treeName, [FromBody] RelationForUpdatingDto relationForUpdatingDto)
+        [HttpPatch("/api/families_trees/{familyTreeName}/characters/relation")]
+        public async Task<IActionResult> PatchRelationBetweenCharacters(string familyTreeName, [FromBody] RelationForUpdatingDto relationForUpdatingDto)
         {
             try
             {
@@ -230,15 +252,15 @@ namespace UniverseCreation.API.Adapter.In.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogCritical($"Exception while updating relation between two characters from the family name : {family_treeName}.",
+                _logger.LogCritical($"Exception while updating relation between two characters from the family name : {familyTreeName}.",
                     ex);
                 return StatusCode(500,
                     "A problem happened while handling your request.");
             }
         }
 
-        [HttpGet("/api/families_trees/{family_treeName}/characters/{character_name}/relation/{relation_description}")]
-        public async Task<IActionResult> GetRelationForCharacter(string family_treeName, string character_name, string relation_description)
+        [HttpGet("/api/families_trees/{familyTreeName}/characters/{character_name}/relation/{relation_description}")]
+        public async Task<IActionResult> GetRelationForCharacter(string familyTreeName, string character_name, string relation_description)
         {
             try
             {
@@ -252,7 +274,7 @@ namespace UniverseCreation.API.Adapter.In.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogCritical($"Exception while getting characters with a relation {relation_description} for the character {character_name} for the family name name : {family_treeName}.",
+                _logger.LogCritical($"Exception while getting characters with a relation {relation_description} for the character {character_name} for the family name name : {familyTreeName}.",
                     ex);
                 return StatusCode(500,
                     "A problem happened while handling your request.");
@@ -325,275 +347,5 @@ namespace UniverseCreation.API.Adapter.In.Controllers
                     "A problem happened while handling your request.");
             }
         }
-
-
-
-        /*[HttpGet("details")]
-        public ActionResult<IEnumerable<CharacterDto>> GetCharacters(int universe)
-        {
-            try
-            {
-                // find universe
-                var universeFind = UniversesDataStores.Current.Universes.FirstOrDefault(c => c.Id == universe);
-
-                if (universeFind == null)
-                {
-                    _logger.LogInformation($"Universe with id {universe} was'nt found when accessing characters.");
-                    return NotFound();
-                }
-
-                var charactersList = new List<CharacterDto>();
-                charactersList = CharactersDataStores.Current.Characters.Where(c => c.IdUniverse == universe)
-                                .ToList();
-
-                return Ok(charactersList);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogCritical($"Exception while getting characters for universe with id {universe}.",
-                    ex);
-                return StatusCode(500,
-                    "A problem happened while handling your request.");
-            }
-        }
-        
-        [HttpGet("details/{characterId}", Name = "GetCharacters")]
-        public ActionResult<CharacterDto> GetCharacter(int universe, int characterId)
-        {
-            int universeId = universe;
-            try
-            {
-                // find universe
-                var universeFind = UniversesDataStores.Current.Universes.FirstOrDefault(c => c.Id == universeId);
-
-                if (universeFind == null)
-                {
-                    _logger.LogInformation($"Universe with id {universeId} was'nt found when accessing characters.");
-                    return NotFound();
-                }
-
-                // find character
-                var character = CharactersDataStores.Current.Characters.FirstOrDefault(c => c.Id == characterId);
-
-                if (character == null)
-                {
-                    _logger.LogInformation($"Character with id {characterId} was'nt found when accessing characters.");
-                    return NotFound();
-                }
-
-                return Ok(character);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogCritical($"Exception while getting characters for character with id {characterId}.",
-                    ex);
-                return StatusCode(500,
-                    "A problem happened while handling your request.");
-            }
-            
-        }
-
-        [HttpPost("details")]
-        public ActionResult<CharacterDto> CreationCharacter(int universe, [FromBody] CharacterForCreationDto character)
-        {
-            int universeId = universe;
-            try
-            {
-                // find universe
-                var universeFind = UniversesDataStores.Current.Universes.FirstOrDefault(c => c.Id == universeId);
-
-                if (universeFind == null)
-                {
-                    _logger.LogInformation($"Universe with id {universeId} was'nt found when creating character.");
-                    return NotFound();
-                }
-
-                // to be improved
-                var maxCharacter = CharactersDataStores.Current.Characters.Max(p => p.Id);
-
-                var finalCharacter = new CharacterDto()
-                {
-                    Id = ++maxCharacter,
-                    IdUniverse = universeId,
-                    Pseudo = character.Pseudo
-                    //Name = character.Name,
-                    //Description = character.Description
-                };
-
-                CharactersDataStores.Current.Characters.Add(finalCharacter);
-
-                return CreatedAtRoute("GetCharacters",
-                    new
-                    {
-                        universeId = universeId,
-                        characterId = finalCharacter.Id
-                    },
-                    finalCharacter);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogCritical($"Exception while creation character for universe with id {universeId}.",
-                    ex);
-                return StatusCode(500,
-                    "A problem happened while handling your request.");
-            }
-        }
-
-        [HttpPut("details/{characterId}")]
-        public ActionResult UpdateCharacter(int universe, int characterId,
-            [FromBody] CharacterForUpdateDto character)
-        {
-            int universeId = universe;
-            try
-            {
-                // find universe
-                var universeFind = UniversesDataStores.Current.Universes.FirstOrDefault(c => c.Id == universeId);
-
-                if (universeFind == null)
-                {
-                    _logger.LogInformation($"Universe with id {universeId} was'nt found when updating character.");
-                    return NotFound();
-                }
-
-                // find character to update
-                var characterFromStore = CharactersDataStores.Current.Characters.FirstOrDefault(c => c.Id == characterId);
-
-                if (characterFromStore == null)
-                {
-                    _logger.LogInformation($"Character with id {characterId} was'nt found when updating character.");
-                    return NotFound();
-                }
-                characterFromStore.IdUniverse = universeId;
-                characterFromStore.Pseudo = character.Pseudo;
-                characterFromStore.Name = character.Name;
-                characterFromStore.Description = character.Description;
-                characterFromStore.Gender = character.Gender;
-                characterFromStore.HairColor = character.HairColor;
-                characterFromStore.EyeColor = character.EyeColor;
-
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogCritical($"Exception while updating character for character with id {characterId}.",
-                    ex);
-                return StatusCode(500,
-                    "A problem happened while handling your request.");
-            }
-        }
-
-        [HttpPatch("details/{characterId}")]
-        public ActionResult PartiallyUdpateCharacter(int universe, int characterId,
-            [FromBody] JsonPatchDocument<CharacterForUpdateDto> patchDocument)
-        {
-            int universeId = universe;
-            try
-            {
-                // find universe
-                var universeFind = UniversesDataStores.Current.Universes.FirstOrDefault(c => c.Id == universeId);
-
-                if (universeFind == null)
-                {
-                    _logger.LogInformation($"Universe with id {universeId} was'nt found when updating character.");
-                    return NotFound();
-                }
-
-                // find character to update
-                var characterFromStore = CharactersDataStores.Current.Characters.FirstOrDefault(c => c.Id == characterId);
-
-                if (characterFromStore == null)
-                {
-                    _logger.LogInformation($"Character with id {characterId} was'nt found when updating character.");
-                    return NotFound();
-                }
-
-
-                var characterToPatch =
-                    new CharacterForUpdateDto()
-                    {
-                        IdUniverse = characterFromStore.IdUniverse,
-                        Pseudo = characterFromStore.Pseudo,
-                        Name = characterFromStore.Name,
-                        Description = characterFromStore.Description,
-                        Gender = characterFromStore.Gender,
-                        HairColor = characterFromStore.HairColor,
-                        EyeColor = characterFromStore.EyeColor,
-                    };
-
-                patchDocument.ApplyTo(characterToPatch, ModelState);
-
-                // check the enter properties
-                if (!ModelState.IsValid)
-                {
-                    _logger.LogInformation($"Character with id {characterId} was'nt valid when updating character.");
-                    return BadRequest(ModelState);
-                }
-
-                // check the enter properties after a update
-                if (!TryValidateModel(characterToPatch))
-                {
-                    _logger.LogInformation($"Character with id {characterId} was'nt valid when updating character.");
-                    return BadRequest(ModelState);
-                }
-
-                // replace de value
-                characterFromStore.IdUniverse = characterToPatch.IdUniverse;
-                characterFromStore.Pseudo = characterToPatch.Pseudo;
-                characterFromStore.Name = characterToPatch.Name;
-                characterFromStore.Description = characterToPatch.Description;
-                characterFromStore.Gender = characterToPatch.Gender;
-                characterFromStore.HairColor = characterToPatch.HairColor;
-                characterFromStore.EyeColor = characterToPatch.EyeColor;
-
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogCritical($"Exception while updating character for character with id {characterId}.",
-                    ex);
-                return StatusCode(500,
-                    "A problem happened while handling your request.");
-            }
-
-        }
-
-        [HttpDelete("details/{characterId}")]
-        public ActionResult DeleteCharacter(int universe, int characterId)
-        {
-            int universeId = universe;
-            try
-            {
-                // find universe
-                var universeFind = UniversesDataStores.Current.Universes.FirstOrDefault(c => c.Id == universeId);
-
-                if (universeFind == null)
-                {
-                    _logger.LogInformation($"Universe with id {universeId} was'nt found when deleting character.");
-                    return NotFound();
-                }
-
-                // find character to update
-                var characterFromStore = CharactersDataStores.Current.Characters.FirstOrDefault(c => c.Id == characterId);
-
-                if (characterFromStore == null)
-                {
-                    _logger.LogInformation($"Character with id {characterId} was'nt found when deleting character.");
-                    return NotFound();
-                }
-
-                // delete permanently 
-                CharactersDataStores.Current.Characters.Remove(characterFromStore);
-
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogCritical($"Exception while deleting character for character with id {characterId}.",
-                    ex);
-                return StatusCode(500,
-                    "A problem happened while handling your request.");
-            }
-
-        }*/
     }
 }

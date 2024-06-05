@@ -4,6 +4,7 @@ using UniverseCreation.API.Adapter.Out.Repository;
 using UniverseCreation.API.Application.Domain.Model;
 using UniverseCreation.API.Application.Port.Out;
 using System.Linq;
+using MongoDB.Bson;
 
 namespace UniverseCreation.API.Adapter.Out.Persistance
 {
@@ -89,7 +90,18 @@ namespace UniverseCreation.API.Adapter.Out.Persistance
                 throw new InvalidOperationException($"Character with the name {characterName} wasn't found when adding character in familyTree.");
             }
 
-            return await _characterRepositoryGraph.CreateRelationBetweenCharacterAndFamilyTree(familyTreeName, characterName);
+            var familyMember = await _characterRepositoryGraph.MatchAllCharactersFromFamilyTree(familyTreeName);
+
+            var addCharacter = await _characterRepositoryGraph.CreateRelationBetweenCharacterAndFamilyTree(familyTreeName, characterName);
+
+            bool setLevel;
+            if(familyMember.Count == 0) 
+            { 
+                setLevel = await _characterRepositoryGraph.SetLevelFamilyFrom(characterName, familyTreeName, 0);
+            } else { setLevel = true; }
+
+            if (addCharacter == true && setLevel == true) { return true; }
+            else { return false; } 
         }
 
         public async Task<bool> DisconnectCharacterToFamilyTree(string familyTreeName, string characterName)
@@ -111,20 +123,7 @@ namespace UniverseCreation.API.Adapter.Out.Persistance
             }
 
             // check if the character had other family tree
-            var familiesTreesFound = await _characterRepositoryGraph.MatchAllFamilyTreeFromCharacter(characterName);
-            if (familiesTreesFound.Count > 1)
-            {
-                return await _characterRepositoryGraph.DeleteRelationBetweenCharacterAndFamilyTree(familyTreeName, characterName);
-            }
-            else
-            {
-                if (await _characterRepositoryGraph.DeleteRelationBetweenCharactersInFamilyTree(characterName) == false ||
-                   await _characterRepositoryGraph.DeleteRelationBetweenCharacterAndFamilyTree(familyTreeName, characterName) == false )
-                {
-                    return false;
-                }
-                return true;
-            }                
+            return await _characterRepositoryGraph.DeleteRelationBetweenCharacterAndFamilyTree(familyTreeName, characterName) ;              
         }
 
         public async Task<bool> ConnectTwoCharacters(string characterName1, string characterName2, string relationDescription, List<CharacterNodeDto> characters,  string familyTreeName)
@@ -145,9 +144,16 @@ namespace UniverseCreation.API.Adapter.Out.Persistance
                 throw new InvalidOperationException($"Character with the name {characterName2} wasn't found when connecting two characters in familyTree.");
             }
 
+            // Check if the relation already exist 
+            var relationsExist = await _characterRepositoryGraph.MatchRelationBetweenCharacters(characterName1, characterName2);
+            if (relationsExist != null)
+            {
+                _logger.LogInformation($"Characters with the name {characterName1} and {characterName2} had already a relation in the FamilyTree with the name {familyTreeName}.");
+                throw new InvalidOperationException($"Characters with the name {characterName1} and {characterName2} had already a relation in the FamilyTree with the name {familyTreeName}.");
+            }
+
             if (relationDescription == "Enfant" || relationDescription == "Parent")
             {
-                Console.WriteLine("Relation Enfant- parent");
                 CharacterNodeDto characterParent;
                 CharacterNodeDto characterEnfant;
                 if (relationDescription == "Parent") {
@@ -158,9 +164,7 @@ namespace UniverseCreation.API.Adapter.Out.Persistance
                     characterParent = characters.FirstOrDefault(node => node.name == characterName2);
                     characterEnfant = characters.FirstOrDefault(node => node.name == characterName1);
                 }
-                Console.WriteLine("Enfant = " + characterEnfant.name);
-                Console.WriteLine("Parent = " + characterParent.name);
-
+                
                 // creation of a parent-children relation
                 if (characterEnfant.parents != null && characterEnfant.parents.Count >= 2)
                 {
@@ -171,6 +175,7 @@ namespace UniverseCreation.API.Adapter.Out.Persistance
                         return false;
                     }
                 }
+
 
                 if (characterEnfant.level == -1)
                 {
@@ -192,10 +197,10 @@ namespace UniverseCreation.API.Adapter.Out.Persistance
                             if (character.level != -1)
                             {
                                 int newLevel = character.level + 1;
-                                await _characterRepositoryGraph.SetLevelFamilyFrom(character.name, familyTreeName, character.level);
+                                await _characterRepositoryGraph.SetLevelFamilyFrom(character.name, familyTreeName, newLevel);
                             }
                         }
-                        await _characterRepositoryGraph.SetLevelFamilyFrom(characterEnfant.name, familyTreeName, 0);
+                        await _characterRepositoryGraph.SetLevelFamilyFrom(characterParent.name, familyTreeName, 0);
                     }
                     else { return false; }
 
@@ -280,23 +285,20 @@ namespace UniverseCreation.API.Adapter.Out.Persistance
                 else { childCharacter = characterName2; }
                 CharacterNodeDto childNode = characters.FirstOrDefault(node => node.name == childCharacter);
 
-                if (childNode != null)
+                // check if the child had two parents in the tree
+                int validParentCount = 0;
+
+                foreach (var character in characters)
                 {
-                    // check if the child had two parents in the tree
-                    int validParentCount = 0;
-
-                    foreach (var character in characters)
+                    if ((character.children.Contains(childCharacter)) && character.level != -1)
                     {
-                        if ((character.children.Contains(childCharacter)) && character.level != -1)
-                        {
-                            validParentCount++;
-                        }
+                        validParentCount++;
                     }
+                }
 
-                    if (validParentCount == 1)
-                    {
-                        await SetLevelToAllDescendantInStack(childNode, characters, familyTreeName);
-                    }
+                if (validParentCount == 1)
+                {
+                    await SetLevelToAllDescendantInStack(childNode, characters, familyTreeName);
                 }
                 
                 // remove the two relation
@@ -445,8 +447,6 @@ namespace UniverseCreation.API.Adapter.Out.Persistance
             }
         }
 
-
-
         public async Task<bool> FixRelationBetweenCharacters(string characterName1, string characterName2, string relationDescription)
         {
             // check if the first character exist
@@ -539,8 +539,6 @@ namespace UniverseCreation.API.Adapter.Out.Persistance
             var updateCharacter = await _characterRepositoryMongo.UpdateCharacter(character);
             string characterDetailsName = character.FirstName + " " + character.LastName;
 
-            Console.WriteLine($"Name : {characterName}");
-            Console.WriteLine($"New name : {characterDetailsName}");
             var updateNameCharacter = true;
             if (characterDetailsName != characterName)
             {
@@ -550,6 +548,84 @@ namespace UniverseCreation.API.Adapter.Out.Persistance
 
             if (updateCharacter == true && updateNameCharacter == true) { return true; }
             else { return false; }
+        }
+
+        private async Task<List<CharacterNodeDto>> transformCharacterInCharacterNodeDto(List<Dictionary<string, object>> characters, string family_treeName)
+        {
+            var characterNodeDtos = new List<CharacterNodeDto>();
+
+            foreach (var character in characters)
+            {
+                var characterName = character["name"].ToString();
+
+                var childrenDict = await GetAllRelationForCharacter(characterName, "Enfant");
+                var parentsDict = await GetAllRelationForCharacter(characterName, "Parent");
+                var marriedDict = await GetAllRelationForCharacter(characterName, "Marrié");
+                var divorcedDict = await GetAllRelationForCharacter(characterName, "Divorcé");
+                var coupleDict = await GetAllRelationForCharacter(characterName, "En couple");
+                var amantDict = await GetAllRelationForCharacter(characterName, "Amant");
+                var levelDict = await GetLevelFamilyTreeForCharacter(characterName, family_treeName);
+
+                var children = childrenDict.Select(child => child["name"].ToString()).ToList();
+                var parents = parentsDict.Select(parent => parent["name"].ToString()).ToList();
+                var married = marriedDict.Select(marriage => marriage["name"].ToString()).ToList();
+                var divorced = divorcedDict.Select(divorce => divorce["name"].ToString()).ToList();
+                var couple = coupleDict.Select(couple => couple["name"].ToString()).ToList();
+                var amant = amantDict.Select(couple => couple["name"].ToString()).ToList();
+                var level = levelDict.Select(level => Convert.ToInt32(level["level"])).FirstOrDefault();
+
+                var characterNodeDto = new CharacterNodeDto
+                {
+                    name = characterName,
+                    children = children,
+                    parents = parents,
+                    married = married,
+                    divorced = divorced,
+                    couple = couple,
+                    amant = amant,
+                    level = level,
+                };
+
+                characterNodeDtos.Add(characterNodeDto);
+            }
+
+            return characterNodeDtos;
+        }
+
+        public async Task<bool> RemoveCharacter(string universeId, string characterId, string characterName )
+        {
+            var familiesFree = await _characterRepositoryGraph.getFamilyTreeByCharacter(characterName);
+            if (familiesFree != null)
+            {
+                foreach (var family in familiesFree)
+                {
+                    string familyName = family["name"].ToString();
+
+                    var characters = await _characterRepositoryGraph.MatchAllCharactersFromFamilyTree(familyName);
+
+                    if (characters.Count != 0)
+                    {
+                        var charactersNode = await transformCharacterInCharacterNodeDto(characters, familyName);
+
+                        CharacterNodeDto character = charactersNode.FirstOrDefault(node => node.name == characterName);
+
+                        await SetLevelToAllDescendantInStack(character, charactersNode, familyName);
+                    }
+                }
+            }
+
+            if ( (await _characterRepositoryGraph.DeleteCharacter(characterName)) &&
+                (await _characterRepositoryMongo.DeleteCharacterById(characterId)) && 
+                (await _universeRepositoryMongo.RemoveCharacterFromUniverse(universeId, characterId)))
+            { 
+                return true; 
+            } 
+            return false;
+        }
+
+        public async Task<bool> SetLevelCharacter(string characterName, string familyTreeName, int level)
+        {
+            return await _characterRepositoryGraph.SetLevelFamilyFrom(characterName, familyTreeName, level);
         }
     }
 }

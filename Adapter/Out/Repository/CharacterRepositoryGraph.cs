@@ -313,5 +313,40 @@ namespace UniverseCreation.API.Adapter.Out.Repository
 
             return await _neo4JDataAccess.ExecuteWriteTransactionAsync<bool>(query, parameters);
         }
+
+        // Delete a character node
+        public async Task<bool> DeleteCharacter(string characterName)
+        {
+            var query = @"MATCH (character:Character {name: $characterName})
+                        DETACH DELETE character";
+
+            IDictionary<string, object> parameters = new Dictionary<string, object> {
+                    { "characterName", characterName }
+            };
+
+            _logger.LogInformation($"The character {characterName} have been delete successfully");
+
+            return await _neo4JDataAccess.ExecuteWriteTransactionAsync<bool>(query, parameters);
+        }
+
+        // get a list of familyTree by a characterName
+        public async Task<List<Dictionary<string, object>>> getFamilyTreeByCharacter(string characterName)
+        {
+            var query = @"MATCH (:Character {name: $characterName})-[:FAMILY_FROM]->(familyTree:FamilyTree)
+                        RETURN familyTree";
+
+            IDictionary<string, object> parameters = new Dictionary<string, object> { 
+                { "characterName", characterName } 
+            };
+
+            var familiesTree = await _neo4JDataAccess.ExecuteReadDictionaryAsync(query, "familyTree", parameters);
+
+            if (familiesTree != null && familiesTree.Count == 0)
+            {
+                familiesTree = null;
+            }
+
+            return familiesTree;
+        }
     }
 }

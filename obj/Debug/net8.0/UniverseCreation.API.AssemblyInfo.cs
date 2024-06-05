@@ -11,10 +11,11 @@
 using System;
 using System.Reflection;
 
+[assembly: Microsoft.Extensions.Configuration.UserSecrets.UserSecretsIdAttribute("74deaf3b-64ff-49b6-aa8e-8c691751d774")]
 [assembly: System.Reflection.AssemblyCompanyAttribute("UniverseCreation.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+793ccdefcb6055ad70852bc671706adfe2bd7568")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+16f81f352aae639b2a2d5a818bc0dcfce6706d6f")]
 [assembly: System.Reflection.AssemblyProductAttribute("UniverseCreation.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("UniverseCreation.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "fOPyPYyQAY3PDBYm/J6aPEZLHI293Xx327aHtkzACSP610grCZtIF9eXQCTFO++NTNECapaXLnbz6u/zSCYNbw==",
+  "dgSpecHash": "EyY+iaybwZuJFagKDSJRadJUxTa6di96DOq5u2oRce9RCv8vYVUbddiY3uVK3qexANccf5ouKMXmcOozPvVzpw==",
   "success": true,
   "projectFilePath": "C:\\Users\\fanny\\Documents\\MyProject\\TFE\\backend\\UniverseCreation.API\\UniverseCreation.API.csproj",
   "expectedPackageFiles": [
@@ -18,6 +18,7 @@
     "C:\\Users\\fanny\\.nuget\\packages\\microsoft.extensions.primitives\\8.0.0\\microsoft.extensions.primitives.8.0.0.nupkg.sha512",
     "C:\\Users\\fanny\\.nuget\\packages\\microsoft.netcore.platforms\\5.0.0\\microsoft.netcore.platforms.5.0.0.nupkg.sha512",
     "C:\\Users\\fanny\\.nuget\\packages\\microsoft.openapi\\1.2.3\\microsoft.openapi.1.2.3.nupkg.sha512",
+    "C:\\Users\\fanny\\.nuget\\packages\\microsoft.visualstudio.azure.containers.tools.targets\\1.19.6\\microsoft.visualstudio.azure.containers.tools.targets.1.19.6.nupkg.sha512",
     "C:\\Users\\fanny\\.nuget\\packages\\microsoft.win32.registry\\5.0.0\\microsoft.win32.registry.5.0.0.nupkg.sha512",
     "C:\\Users\\fanny\\.nuget\\packages\\mongodb.bson\\2.25.0\\mongodb.bson.2.25.0.nupkg.sha512",
     "C:\\Users\\fanny\\.nuget\\packages\\mongodb.driver\\2.25.0\\mongodb.driver.2.25.0.nupkg.sha512",
