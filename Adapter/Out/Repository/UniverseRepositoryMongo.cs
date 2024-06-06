@@ -37,13 +37,13 @@ namespace UniverseCreation.API.Adapter.Out.Repository
             }
         }
 
-        public async Task<List<UniverseDetailsDto>> CatchAllUniverse()
+        public async Task<List<UniverseDto>> CatchAllUniverse()
         {
             try
             {
                 _logger.LogInformation("Fetching all universes from MongoDB.");
                 var documents = await _collection.Find(_ => true).ToListAsync();
-                var universeList = new List<UniverseDetailsDto>();
+                var universeList = new List<UniverseDto>();
 
                 if (documents == null || !documents.Any())
                 {
@@ -73,7 +73,7 @@ namespace UniverseCreation.API.Adapter.Out.Repository
                 _logger.LogInformation("Fetching universe by ID: {UniverseId}", universeId);
                 var universeCursor = await _collection.FindAsync(Builders<BsonDocument>.Filter.Eq("_id", new ObjectId(universeId)));
                 var document = universeCursor.FirstOrDefault();
-                var universe = ConvertBsonToUniverse(document);
+                var universe = ConvertBsonToUniverseDetails(document);
 
                 if (universe == null)
                 {
@@ -144,24 +144,6 @@ namespace UniverseCreation.API.Adapter.Out.Repository
             }
         }
 
-        private UniverseDetailsDto ConvertBsonToUniverse(BsonDocument document)
-        {
-            if (document == null) return null;
-
-            var charactersArray = document["characters"].AsBsonArray;
-
-            return new UniverseDetailsDto
-            {
-                Id = document["_id"].AsObjectId.ToString(),
-                Name = document["name"].AsString,
-                LiteraryGenre = document["literary_genre"].AsString,
-                Characters = charactersArray.Select(c => new CharacterReference
-                {
-                    CharacterId = c["character_id"].AsObjectId.ToString()
-                }).ToList()
-            };
-        }
-
         public async Task<bool> RemoveCharacterFromUniverse(string universeId, string characterId)
         {
             try
@@ -187,6 +169,41 @@ namespace UniverseCreation.API.Adapter.Out.Repository
                 _logger.LogError(ex, "An error occurred while removing character from universe.");
                 return false;
             }
+        }
+
+        private UniverseDetailsDto ConvertBsonToUniverseDetails(BsonDocument document)
+        {
+            if (document == null) return null;
+
+            var charactersArray = document["characters"].AsBsonArray;
+            var booksArray = document["books"].AsBsonArray;
+
+            return new UniverseDetailsDto
+            {
+                Id = document["_id"].AsObjectId.ToString(),
+                Name = document["name"].AsString,
+                LiteraryGenre = document["literary_genre"].AsString,
+                Characters = charactersArray.Select(c => new CharacterReference
+                {
+                    CharacterId = c["character_id"].AsObjectId.ToString()
+                }).ToList(),
+                Books = booksArray.Select(b => new BookReference
+                {
+                    BookId = b["book_id"].AsObjectId.ToString()
+                }).ToList()
+            };
+        }
+
+        private UniverseDto ConvertBsonToUniverse(BsonDocument document)
+        {
+            if (document == null) return null;
+
+            return new UniverseDto
+            {
+                Id = document["_id"].AsObjectId.ToString(),
+                Name = document["name"].AsString,
+                LiteraryGenre = document["literary_genre"].AsString
+            };
         }
     }
 }

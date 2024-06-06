@@ -42,6 +42,7 @@ builder.Services.AddSingleton(GraphDatabase.Driver(settings.Neo4jConnection, Aut
 builder.Services.AddScoped<INeo4jDataAccess, Neo4jDataAccess>();
 builder.Services.AddScoped<UniverseRepositoryMongo, UniverseRepositoryMongo>();
 builder.Services.AddScoped<CharacterRepositoryMongo, CharacterRepositoryMongo>();
+builder.Services.AddScoped<BookRepositoryMongoDB, BookRepositoryMongoDB>();
 
 
 // Registration for the domain repository class
@@ -54,9 +55,8 @@ builder.Services.AddTransient<FamilyTreeRepositoryGraph, FamilyTreeRepositoryGra
 builder.Services.AddTransient<IUniverseService, UniverseService>();
 builder.Services.AddTransient<IUniversePersistance, UniversePersistance>();
 builder.Services.AddTransient<UniverseRepositoryGraph, UniverseRepositoryGraph>();
-//builder.Services.AddTransient<UniverseRepositoryMongo, UniverseRepositoryMongo>();
-
-
+builder.Services.AddTransient<IBookService, BookService>();
+builder.Services.AddTransient<IBookPersistance, BookPersistance>();
 
 
 

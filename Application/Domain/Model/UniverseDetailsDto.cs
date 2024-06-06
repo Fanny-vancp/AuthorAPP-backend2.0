@@ -20,5 +20,8 @@ namespace UniverseCreation.API.Application.Domain.Model
 
         [BsonElement("characters")]
         public List<CharacterReference> Characters { get; set; }
+
+        [BsonElement("books")]
+        public List<BookReference> Books { get; set; }
     }
 }

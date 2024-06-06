@@ -59,14 +59,7 @@ namespace UniverseCreation.API.Adapter.Out.Repository
 
                 foreach (var document in documents)
                 {
-                    characterList.Add(new CharacterDto
-                    {
-                        Id = document["_id"].AsObjectId.ToString(),
-                        LastName = document["last_name"].AsString,
-                        FirstName = document["first_name"].AsString,
-                        Pseudo = document["pseudo"].AsString,
-                        Images = document["images"].AsBsonArray.Select(image => image.AsString).ToList()
-                    });
+                    characterList.Add(ConvertBsonToCharacter(document));
                 }
 
                 _logger.LogInformation("Successfully fetched {Count} characters.", characterList.Count);
@@ -218,6 +211,32 @@ namespace UniverseCreation.API.Adapter.Out.Repository
             }
         }
 
+        public async Task<bool> DeleteCharacterById(string characterId)
+        {
+            try
+            {
+                _logger.LogInformation("Deleting character with ID: {CharacterId}", characterId);
+
+                var filter = Builders<BsonDocument>.Filter.Eq("_id", new ObjectId(characterId));
+
+                var result = await _collection.DeleteOneAsync(filter);
+
+                if (result.DeletedCount == 0)
+                {
+                    _logger.LogWarning("No character found with ID: {CharacterId} to delete.", characterId);
+                    return false;
+                }
+
+                _logger.LogInformation("Successfully deleted character with ID: {CharacterId}", characterId);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while deleting character with ID: {CharacterId}", characterId);
+                throw;
+            }
+        }
+
         private CharacterDto ConvertBsonToCharacter(BsonDocument document)
         {
             if (document == null) return null;
@@ -260,32 +279,6 @@ namespace UniverseCreation.API.Adapter.Out.Repository
                 Aptitude = document["aptitude"].AsBsonArray.Select(aptitude => aptitude.AsString).ToList(),
                 Historic = document["historic"].AsString
             };
-        }
-
-        public async Task<bool> DeleteCharacterById(string characterId)
-        {
-            try
-            {
-                _logger.LogInformation("Deleting character with ID: {CharacterId}", characterId);
-
-                var filter = Builders<BsonDocument>.Filter.Eq("_id", new ObjectId(characterId));
-
-                var result = await _collection.DeleteOneAsync(filter);
-
-                if (result.DeletedCount == 0)
-                {
-                    _logger.LogWarning("No character found with ID: {CharacterId} to delete.", characterId);
-                    return false;
-                }
-
-                _logger.LogInformation("Successfully deleted character with ID: {CharacterId}", characterId);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while deleting character with ID: {CharacterId}", characterId);
-                throw;
-            }
         }
 
     }
