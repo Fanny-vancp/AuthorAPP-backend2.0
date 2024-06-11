@@ -5,6 +5,7 @@ using UniverseCreation.API.Application.Domain.Model;
 using UniverseCreation.API.Application.Port.Out;
 using System.Linq;
 using MongoDB.Bson;
+using System.ComponentModel;
 
 namespace UniverseCreation.API.Adapter.Out.Persistance
 {
@@ -72,7 +73,7 @@ namespace UniverseCreation.API.Adapter.Out.Persistance
             return characters;
         }
 
-        public async Task<bool> ConnectCharacterToFamilyTree(string familyTreeName, string characterName)
+        public async Task<bool> ConnectCharacterToFamilyTree(string familyTreeName, string characterName, List<CharacterNodeDto> familyMembers)
         {
             // check if the family tree exist
             var familyTreeFound = await _familyTreeRepositoryGraph.FindFamilyTree(familyTreeName);
@@ -90,12 +91,38 @@ namespace UniverseCreation.API.Adapter.Out.Persistance
                 throw new InvalidOperationException($"Character with the name {characterName} wasn't found when adding character in familyTree.");
             }
 
-            var familyMember = await _characterRepositoryGraph.MatchAllCharactersFromFamilyTree(familyTreeName);
+
+            // if the character had any child who are already in the family
+            // and this child had already two parents in this family
+            var enfantCharacter = await _characterRepositoryGraph.MatchCharactersWithRelationFromCharacter(characterName, "Parent");
+            if (enfantCharacter != null)
+            {
+                var parentsCharacter = await _characterRepositoryGraph.MatchCharactersWithRelationFromCharacter(characterName, "enfant");
+                var parentsCharacterNode = await transformCharacterInCharacterNodeDto(parentsCharacter, familyTreeName);
+                if (parentsCharacterNode != null && parentsCharacterNode.Count >= 2)
+                {
+                    int characterParentIn = 0;
+                    foreach (var character in parentsCharacterNode)
+                    {
+                        // Check if the character is in familyMember
+                        if (familyMembers.Any(fm => fm.name == character.name)) 
+                        {
+                            characterParentIn++;
+                        }
+                    }
+
+                    if (characterParentIn >= 2)
+                    {
+                        return false;
+                    }
+                }
+            }        
 
             var addCharacter = await _characterRepositoryGraph.CreateRelationBetweenCharacterAndFamilyTree(familyTreeName, characterName);
 
+            // if the character added it's the first in the familyTree
             bool setLevel;
-            if(familyMember.Count == 0) 
+            if(familyMembers.Count == 0) 
             { 
                 setLevel = await _characterRepositoryGraph.SetLevelFamilyFrom(characterName, familyTreeName, 0);
             } else { setLevel = true; }
@@ -211,6 +238,26 @@ namespace UniverseCreation.API.Adapter.Out.Persistance
                     else { return false; }
 
                 }
+                else if (characterEnfant.level >=1 && characterParent.level >= 1 && characterEnfant.level == characterParent.level -1)
+                {
+                    var parentOne = characters.FirstOrDefault(fm => characterEnfant.parents.Contains(fm.name));
+
+                    if (parentOne != null)
+                    {
+                        // chech if there is a relation between the parent already on the tree and the new parent
+                        var relation = await _characterRepositoryGraph.MatchRelationBetweenCharacters(characterParent.name, parentOne.name);
+                        if (relation != null)
+                        {
+                            var relationCreated1 = await _characterRepositoryGraph.CreateRelationBetweenCharacters(characterEnfant.name, characterParent.name, "Enfant");
+                            var relationCreated2 = await _characterRepositoryGraph.CreateRelationBetweenCharacters(characterParent.name, characterEnfant.name, "Parent");
+
+                            if (relationCreated1 == true && relationCreated2 == true) { return true; }
+                            else { return false; }
+                        }
+                    }
+                    else { return false; }
+                    
+                }
                 else { return false; }
             }
 
@@ -223,13 +270,26 @@ namespace UniverseCreation.API.Adapter.Out.Persistance
                 CharacterNodeDto characterIn = characters.FirstOrDefault(character =>
                     (character.name == characterName1 || character.name == characterName2) && character.level != -1);
 
-                await _characterRepositoryGraph.SetLevelFamilyFrom(characterToAdd.name, familyTreeName, characterIn.level);
+                // check if the character who is already here does not have a horizontale relation
+                // with an other character present in the family
+                bool hasMarriedRelation = characters.Any(fm => characterIn.married != null && characterIn.married.Contains(fm.name));
+                bool hasDivorcedRelation = characters.Any(fm => characterIn.divorced != null && characterIn.divorced.Contains(fm.name));
+                bool hasAmantRelation = characters.Any(fm => characterIn.amant != null && characterIn.amant.Contains(fm.name));
+                bool hasCoupleRelation = characters.Any(fm => characterIn.couple != null && characterIn.couple.Contains(fm.name));
 
-                var relationCreated1 = await _characterRepositoryGraph.CreateRelationBetweenCharacters(characterToAdd.name, characterIn.name, relationDescription);
-                var relationCreated2 = await _characterRepositoryGraph.CreateRelationBetweenCharacters(characterIn.name, characterToAdd.name, relationDescription);
+                if (!hasMarriedRelation && !hasDivorcedRelation &&
+                    !hasCoupleRelation && !hasAmantRelation)
+                {
+                    await _characterRepositoryGraph.SetLevelFamilyFrom(characterToAdd.name, familyTreeName, characterIn.level);
 
-                if (relationCreated1 == true && relationCreated2 == true) { return true; }
-                else { return false; }
+                    var relationCreated1 = await _characterRepositoryGraph.CreateRelationBetweenCharacters(characterToAdd.name, characterIn.name, relationDescription);
+                    var relationCreated2 = await _characterRepositoryGraph.CreateRelationBetweenCharacters(characterIn.name, characterToAdd.name, relationDescription);
+
+                    if (relationCreated1 == true && relationCreated2 == true) { return true; }
+                    else { return false; }
+                }
+                else return false;
+                
             }
 
             return false;
@@ -311,6 +371,7 @@ namespace UniverseCreation.API.Adapter.Out.Persistance
             if (relationDescription == "Marrié" || relationDescription == "Divorcé" || relationDescription == "En couple")
             {
                 var characterToRemoveName = "";
+                var characterToKeepName = "";
                 CharacterNodeDto character1 = characters.FirstOrDefault(node => node.name == characterName1);
                 CharacterNodeDto character2 = characters.FirstOrDefault(node => node.name == characterName2);
 
@@ -323,6 +384,7 @@ namespace UniverseCreation.API.Adapter.Out.Persistance
                         if (characters.Any(c => c.name == parentName))
                         {
                             characterToRemoveName = character2.name;
+                            characterToKeepName = character1.name;
                         }
                     }
                 }
@@ -334,12 +396,14 @@ namespace UniverseCreation.API.Adapter.Out.Persistance
                         if (characters.Any(c => c.name == parentName))
                         {
                             characterToRemoveName = character1.name;
+                            characterToKeepName = character2.name;
                         }
                     }
                 }
                 else
                 {
                     characterToRemoveName = character2.name;
+                    characterToKeepName = character1.name;
                 }
 
                 CharacterNodeDto characterToRemove = characters.FirstOrDefault(node => node.name == characterToRemoveName);
@@ -355,12 +419,15 @@ namespace UniverseCreation.API.Adapter.Out.Persistance
                                 CharacterNodeDto child = characters.FirstOrDefault(node => node.name == childName);
                                 if (child != null)
                                 {
-                                    await SetLevelToAllDescendantInStack(child, characters, familyTreeName);
+                                    if (!child.parents.Contains(characterToKeepName))
+                                    {
+                                        await SetLevelToAllDescendantInStack(child, characters, familyTreeName);
+                                    }
                                 }
                             }
                         }
                     }
-                    _ = await _characterRepositoryGraph.SetLevelFamilyFrom(characterToRemove.name, familyTreeName, -1);
+                    await _characterRepositoryGraph.SetLevelFamilyFrom(characterToRemove.name, familyTreeName, -1);
                 }
 
                 // remove the two relation
@@ -368,9 +435,7 @@ namespace UniverseCreation.API.Adapter.Out.Persistance
                 var removeRelation2 = await _characterRepositoryGraph.DeleteRelationBetweenCharacters(characterName2, characterName1);
 
                 if (removeRelation1 == true && removeRelation2 == true) { return true; }
-
             }
-
 
             return false;
         }

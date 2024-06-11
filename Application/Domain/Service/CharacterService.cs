@@ -85,7 +85,9 @@ namespace UniverseCreation.API.Application.Domain.Service
 
         public async Task<bool> InsertCharacterToFamilyTree(string familyTreeName, string characterName)
         {
-            return await _characterPersistance.ConnectCharacterToFamilyTree(familyTreeName, characterName);
+            var characters = await _characterPersistance.GetAllCharactersFromFamilyTree(familyTreeName);
+            var characterNodeDtos = await transformCharacterInCharacterNodeDto(characters, familyTreeName);
+            return await _characterPersistance.ConnectCharacterToFamilyTree(familyTreeName, characterName, characterNodeDtos);
         }
 
         public async Task<bool> RemoveCharacterToFamilyTree(string familyTreeName, string characterName)

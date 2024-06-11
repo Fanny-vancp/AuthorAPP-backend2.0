@@ -52,7 +52,7 @@ namespace UniverseCreation.API.Adapter.In.Controllers
 
         
         [HttpGet()]
-        public async Task<IActionResult> GetAllCharactersByUniverseNameNode(string universe)
+        public async Task<IActionResult> GetAllCharactersByUniverseName(string universe)
         {
             try
             {

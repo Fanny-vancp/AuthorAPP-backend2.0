@@ -20,16 +20,7 @@ namespace UniverseCreation.API.Adapter.Out.Persistance
 
         public async Task<List<UniverseDto>> GetAllUniverses()
         {
-            var universes = await _universeRepositoryMongo.CatchAllUniverse();
-
-            /*var universes = universesDetails.Select(u => new UniverseDto
-            {
-                Id = u.Id,
-                Name = u.Name,
-                LiteraryGenre = u.LiteraryGenre
-            }).ToList();*/
-
-            return universes;
+            return await _universeRepositoryMongo.CatchAllUniverse();
         }
         public async Task<UniverseDetailsDto> GetUniverseById(string id)
         {
