@@ -10,6 +10,7 @@ namespace UniverseCreation.API.Adapter.In.Controllers
 {
     [ApiController]
     [Route("api/universes/{universe}/characters")]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public class CharactersController : ControllerBase
     {
         private readonly ILogger<CharactersController> _logger;
