@@ -5,9 +5,9 @@ namespace UniverseCreation.API.Application.Port.In
     public interface IBookService
     {
         Task<List<BookDto>> FindAllBooks(string idUniverse);
-        /*Task<BookDetailsDto> FindBookById(string idBook);
+        Task<BookDetailsDto> FindBookById(string idBook);
         Task<bool> CreateNewBook(string idUniverse, BookForCreationDto book);
-        Task<bool> ChangeBook(BookDetailsDto book, string bookName);
-        Task<bool> DeleteBook(string univereseId, string bookId);*/
+        Task<bool> DeleteBook(string univereseId, string bookId);
+        Task<bool> ChangeBook(BookDetailsDto book);
     }
 }

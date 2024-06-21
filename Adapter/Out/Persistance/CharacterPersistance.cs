@@ -238,7 +238,7 @@ namespace UniverseCreation.API.Adapter.Out.Persistance
                     else { return false; }
 
                 }
-                else if (characterEnfant.level >=1 && characterParent.level >= 1 && characterEnfant.level == characterParent.level -1)
+                else if (characterEnfant.level == characterParent.level + 1)
                 {
                     var parentOne = characters.FirstOrDefault(fm => characterEnfant.parents.Contains(fm.name));
 
@@ -595,7 +595,7 @@ namespace UniverseCreation.API.Adapter.Out.Persistance
             var addNodeCharacter = await _characterRepositoryGraph.CreateCharacterNode(character);
             var AddCharacterToUniverse = await _universeRepositoryGraph.AddCharacterToUniverse(character);
 
-            if(addCharacter == true && addNodeCharacter == true && AddCharacterToUniverse == true) { return true; }
+            if(addCharacter == true && addNodeCharacter == true) { return true; }
             else { return false; }
         }
 

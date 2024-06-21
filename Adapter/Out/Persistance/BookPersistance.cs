@@ -38,5 +38,27 @@ namespace UniverseCreation.API.Adapter.Out.Persistance
 
             return allBooks;
         }
+
+        public async Task<BookDetailsDto> GetBookById(string idBook)
+        {
+            return await _bookRepositoryMongo.CatchBookDetailsById(idBook);
+        }
+
+        public async Task<bool> AddNewBook(string idUniverse, BookForCreationDto book)
+        {
+            var bookId = await _bookRepositoryMongo.InsertBook(book);
+            return await _universeRepositoryMongo.AddBookToUniverse(idUniverse, bookId);
+        }
+
+        public async Task<bool> RemoveBook(string idUniverse, string idBook)
+        {
+            var bookId = await _bookRepositoryMongo.DeleteBookById(idBook);
+            return await _universeRepositoryMongo.RemoveBookFromUniverse(idUniverse, idBook);
+        }
+
+        public async Task<bool> ReformBook(BookDetailsDto book)
+        {
+            return await _bookRepositoryMongo.UpdateBook(book);
+        }
     }
 }

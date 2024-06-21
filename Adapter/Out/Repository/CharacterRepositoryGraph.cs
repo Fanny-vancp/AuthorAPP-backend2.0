@@ -1,4 +1,5 @@
-﻿using UniverseCreation.API.Adapter.Out.DataAccess;
+﻿using System.Diagnostics.Eventing.Reader;
+using UniverseCreation.API.Adapter.Out.DataAccess;
 using UniverseCreation.API.Application.Domain.Model;
 using UniverseCreation.API.Application.Port.Out;
 
@@ -272,8 +273,14 @@ namespace UniverseCreation.API.Adapter.Out.Repository
                 };
 
                 _logger.LogInformation($"The character with the name {characterPseudo} has been created successfully in graph database");
+                await _neo4JDataAccess.ExecuteWriteTransactionAsync<bool>(query, parameters);
 
-                return await _neo4JDataAccess.ExecuteWriteTransactionAsync<bool>(query, parameters);
+                var characterExist = await FindCharacter(characterPseudo);
+                if (characterExist != null) { return true; }
+                return false;
+
+
+                //return await _neo4JDataAccess.ExecuteWriteTransactionAsync<bool>(query, parameters);
             }
             else
             {

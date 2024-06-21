@@ -50,7 +50,15 @@ namespace UniverseCreation.API.Adapter.Out.Repository
 
                 _logger.LogInformation($"The universe with the name {universeName} has been created successfully in graph database");
 
-                return await _neo4JDataAccess.ExecuteWriteTransactionAsync<bool>(query, parameters);
+
+                await _neo4JDataAccess.ExecuteWriteTransactionAsync<bool>(query, parameters);
+                var universeExiste = await FindUniverse(universeName);
+                if (universeExiste != null)
+                {
+                    return true;
+                }
+                else { return false; }
+                
             }
             else
             {

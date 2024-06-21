@@ -5,12 +5,15 @@ using UniverseCreation.API.DataStore.ModelDto;
 using UniverseCreation.API.Application.Domain.Model;
 using UniverseCreation.API.Application.Port.In;
 using Swashbuckle.AspNetCore.Annotations;
+using System.Text.RegularExpressions;
 
 namespace UniverseCreation.API.Adapter.In.Controllers
 {
     [ApiController]
     [Route("api/universes/{universe}/characters")]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public class CharactersController : ControllerBase
     {
         private readonly ILogger<CharactersController> _logger;
@@ -23,16 +26,31 @@ namespace UniverseCreation.API.Adapter.In.Controllers
             _characterService = characterService;
         }
 
-        
+        private bool IsValidInput(string input)
+        {
+            // Accepts letters, numbers, spaces, periods, commas, hyphens, and apostrophes
+            string pattern = @"^[a-zA-Z0-9\s\.\,\-\p{L}\'\’]+$";
+            return Regex.IsMatch(input, pattern);
+        }
+
+
         [HttpGet("{characterName}")]
-        //[SwaggerOperation(Summary = "Search character by name", Description = "Retrieve a character by their name.")]
-        //[SwaggerResponse(200, "The character was found.", typeof(CharacterDto))]
-        //[SwaggerResponse(404, "Character not found.")]
-        //[SwaggerResponse(500, "An error occurred while processing the request.")]
         public async Task<IActionResult> SearchCharacterByNameNode(string universe, string characterName)
         {
             try
             {
+                // Validation of user inputs
+                if (string.IsNullOrEmpty(universe) || string.IsNullOrEmpty(characterName))
+                {
+                    return BadRequest("Universe name and character name are required.");
+                }
+
+                // Validation of allowed characters in user inputs
+                if (!IsValidInput(universe) || !IsValidInput(characterName))
+                {
+                    return BadRequest("Inputs contain disallowed characters.");
+                }
+
                 var characters = await _characterService.FindCharacterFromString(universe, characterName);
 
                 return Ok(characters);
@@ -57,6 +75,18 @@ namespace UniverseCreation.API.Adapter.In.Controllers
         {
             try
             {
+                // Validation of user inputs
+                if (string.IsNullOrEmpty(universe))
+                {
+                    return BadRequest("Universe name and character name are required.");
+                }
+
+                // Validation of allowed characters in user inputs
+                if (!IsValidInput(universe))
+                {
+                    return BadRequest("Inputs contain disallowed characters.");
+                }
+
                 var characters = await _characterService.FindAllCharactersNodeFromUniverseName(universe);
 
                 return Ok(characters);
@@ -82,8 +112,24 @@ namespace UniverseCreation.API.Adapter.In.Controllers
         {
             try
             {
-                await _characterService.CreateNewCharacter(universe, character);
-                return Ok();
+                // Validation of user inputs
+                if (string.IsNullOrEmpty(universe) || string.IsNullOrEmpty(character.UniverseName)
+                    || string.IsNullOrEmpty(character.Pseudo))
+                {
+                    return BadRequest("Universe name and character name are required.");
+                }
+
+                // Validation of allowed characters in user inputs
+                if (!IsValidInput(universe) || !IsValidInput(character.UniverseName)
+                    || !IsValidInput(character.Pseudo))
+                {
+                    return BadRequest("Inputs contain disallowed characters.");
+                }
+
+                bool response = await _characterService.CreateNewCharacter(universe, character);
+                if (response) { return Ok(); }
+                return BadRequest();
+                
             }
             catch (InvalidOperationException ex)
             {
@@ -104,6 +150,18 @@ namespace UniverseCreation.API.Adapter.In.Controllers
         {
             try
             {
+                // Validation of user inputs
+                if (string.IsNullOrEmpty(universe) || string.IsNullOrEmpty(characterId))
+                {
+                    return BadRequest("Universe name and character name are required.");
+                }
+
+                // Validation of allowed characters in user inputs
+                if (!IsValidInput(universe) || !IsValidInput(characterId))
+                {
+                    return BadRequest("Inputs contain disallowed characters.");
+                }
+
                 await _characterService.DeleteCharacter(universe, characterId);
                 return Ok();
             }
@@ -123,13 +181,22 @@ namespace UniverseCreation.API.Adapter.In.Controllers
 
 
         [HttpGet("/api/families_trees/{familyTreeName}/characters")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<CharacterNodeDto>))]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetAllCharactersByFamilyTreeNameNode(string familyTreeName)
         {
             try
             {
+                // Validation of user inputs
+                if (string.IsNullOrEmpty(familyTreeName))
+                {
+                    return BadRequest("Universe name and character name are required.");
+                }
+
+                // Validation of allowed characters in user inputs
+                if (!IsValidInput(familyTreeName))
+                {
+                    return BadRequest("Inputs contain disallowed characters.");
+                }
+
                 var characters = await _characterService.FindAllCharactersFromFamilyTree(familyTreeName);
                 return Ok(characters);
             }
@@ -153,6 +220,20 @@ namespace UniverseCreation.API.Adapter.In.Controllers
         {
             try
             {
+                // Validation of user inputs
+                if (string.IsNullOrEmpty(relationForCreationDto.EndPoint)
+                    || string.IsNullOrEmpty(relationForCreationDto.StratPoint))
+                {
+                    return BadRequest("Universe name and character name are required.");
+                }
+
+                // Validation of allowed characters in user inputs
+                if (!IsValidInput(relationForCreationDto.EndPoint)
+                    || !IsValidInput(relationForCreationDto.StratPoint))
+                {
+                    return BadRequest("Inputs contain disallowed characters.");
+                }
+
                 await _characterService.InsertCharacterToFamilyTree(relationForCreationDto.EndPoint, relationForCreationDto.StratPoint);
                 return Ok();
             }
@@ -175,6 +256,20 @@ namespace UniverseCreation.API.Adapter.In.Controllers
         {
             try
             {
+                // Validation of user inputs
+                if (string.IsNullOrEmpty(familyTreeName)
+                    || string.IsNullOrEmpty(characterName))
+                {
+                    return BadRequest("Universe name and character name are required.");
+                }
+
+                // Validation of allowed characters in user inputs
+                if (!IsValidInput(familyTreeName)
+                    || !IsValidInput(characterName))
+                {
+                    return BadRequest("Inputs contain disallowed characters.");
+                }
+
                 await _characterService.RemoveCharacterToFamilyTree(familyTreeName, characterName);
                 return Ok();
             }
@@ -198,6 +293,24 @@ namespace UniverseCreation.API.Adapter.In.Controllers
         {
             try
             {
+                // Validation of user inputs
+                if (string.IsNullOrEmpty(familyTreeName)
+                    || string.IsNullOrEmpty(relationForCreationDto.descriptionRelation)
+                    || string.IsNullOrEmpty(relationForCreationDto.EndPoint)
+                    || string.IsNullOrEmpty(relationForCreationDto.StratPoint))
+                {
+                    return BadRequest("Universe name and character name are required.");
+                }
+
+                // Validation of allowed characters in user inputs
+                if (!IsValidInput(familyTreeName)
+                    || !IsValidInput(relationForCreationDto.descriptionRelation)
+                    || !IsValidInput(relationForCreationDto.EndPoint)
+                    || !IsValidInput(relationForCreationDto.StratPoint))
+                {
+                    return BadRequest("Inputs contain disallowed characters.");
+                }
+
                 await _characterService.InsertRelationBetweenCharacters(relationForCreationDto.StratPoint, 
                     relationForCreationDto.EndPoint, relationForCreationDto.descriptionRelation, familyTreeName);
                 return Ok();
@@ -221,6 +334,21 @@ namespace UniverseCreation.API.Adapter.In.Controllers
         {
             try
             {
+                // Validation of user inputs
+                if (string.IsNullOrEmpty(familyTreeName)
+                    || string.IsNullOrEmpty(characterName1)
+                    || string.IsNullOrEmpty(characterName2))
+                {
+                    return BadRequest("Universe name and character name are required.");
+                }
+
+                // Validation of allowed characters in user inputs
+                if (!IsValidInput(familyTreeName)
+                    || !IsValidInput(characterName1)
+                    || !IsValidInput(characterName2))
+                {
+                    return BadRequest("Inputs contain disallowed characters.");
+                }
                 await _characterService.RemoveRelationBetweenCharacters(characterName1, characterName2, familyTreeName);
                 return Ok();
             }
@@ -243,6 +371,24 @@ namespace UniverseCreation.API.Adapter.In.Controllers
         {
             try
             {
+                // Validation of user inputs
+                if (string.IsNullOrEmpty(familyTreeName)
+                    || string.IsNullOrEmpty(relationForUpdatingDto.descriptionRelation)
+                    || string.IsNullOrEmpty(relationForUpdatingDto.EndPoint)
+                    || string.IsNullOrEmpty(relationForUpdatingDto.StratPoint))
+                {
+                    return BadRequest("Universe name and character name are required.");
+                }
+
+                // Validation of allowed characters in user inputs
+                if (!IsValidInput(familyTreeName)
+                    || !IsValidInput(relationForUpdatingDto.descriptionRelation)
+                    || !IsValidInput(relationForUpdatingDto.EndPoint)
+                    || !IsValidInput(relationForUpdatingDto.StratPoint))
+                {
+                    return BadRequest("Inputs contain disallowed characters.");
+                }
+
                 await _characterService.UpdateRelationBetweenCharacters(relationForUpdatingDto.StratPoint, relationForUpdatingDto.EndPoint, relationForUpdatingDto.descriptionRelation);
                 return Ok();
             }
@@ -265,6 +411,22 @@ namespace UniverseCreation.API.Adapter.In.Controllers
         {
             try
             {
+                // Validation of user inputs
+                if (string.IsNullOrEmpty(familyTreeName)
+                    || string.IsNullOrEmpty(character_name)
+                    || string.IsNullOrEmpty(relation_description))
+                {
+                    return BadRequest("Universe name and character name are required.");
+                }
+
+                // Validation of allowed characters in user inputs
+                if (!IsValidInput(familyTreeName)
+                    || !IsValidInput(character_name)
+                    || !IsValidInput(relation_description))
+                {
+                    return BadRequest("Inputs contain disallowed characters.");
+                }
+
                 var characters = await _characterService.FindAllRelationForCharacter(character_name, relation_description);
                 return Ok(characters);
             }
@@ -288,6 +450,17 @@ namespace UniverseCreation.API.Adapter.In.Controllers
         {
             try
             {
+                // Validation of user inputs
+                if (string.IsNullOrEmpty(universeId))
+                {
+                    return BadRequest("Universe name and character name are required.");
+                }
+
+                // Validation of allowed characters in user inputs
+                if (!IsValidInput(universeId))
+                {
+                    return BadRequest("Inputs contain disallowed characters.");
+                }
                 var characters = await _characterService.FindAllCharacters(universeId);
                 return Ok(characters);
             }
@@ -310,6 +483,17 @@ namespace UniverseCreation.API.Adapter.In.Controllers
         {
             try
             {
+                // Validation of user inputs
+                if (string.IsNullOrEmpty(characterId))
+                {
+                    return BadRequest("Universe name and character name are required.");
+                }
+
+                // Validation of allowed characters in user inputs
+                if (!IsValidInput(characterId))
+                {
+                    return BadRequest("Inputs contain disallowed characters.");
+                }
                 var characters = await _characterService.FindCharacterById(characterId);
                 return Ok(characters);
             }
@@ -332,6 +516,18 @@ namespace UniverseCreation.API.Adapter.In.Controllers
         {
             try
             {
+                // Validation of user inputs
+                if (string.IsNullOrEmpty(characterName))
+                {
+                    return BadRequest("Universe name and character name are required.");
+                }
+
+                // Validation of allowed characters in user inputs
+                /*if (!IsValidInput(characterName) || !IsValidInput(characterDetails.FirstName)
+                    || !IsValidInput(characterDetails.LastName) || !IsValidInput(characterDetails.Pseudo))
+                {
+                    return BadRequest("Inputs contain disallowed characters.");
+                }*/
                 await _characterService.ChangeCharacter(characterDetails, characterName);
                 return Ok();
             }

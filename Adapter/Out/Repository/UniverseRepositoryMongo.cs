@@ -98,11 +98,13 @@ namespace UniverseCreation.API.Adapter.Out.Repository
                 _logger.LogInformation("Inserting new universe into MongoDB.");
 
                 BsonArray charactersArray = new BsonArray();
+                BsonArray booksArray = new BsonArray();
                 var bsonDocument = new BsonDocument
                 {
                     { "name", universe.Name },
                     { "literary_genre", universe.LiteraryGenre },
-                    { "characters", charactersArray }
+                    { "characters", charactersArray },
+                    { "books", booksArray }
                 };
 
                 await _collection.InsertOneAsync(bsonDocument);
@@ -162,6 +164,60 @@ namespace UniverseCreation.API.Adapter.Out.Repository
                 }
 
                 _logger.LogInformation("Successfully removed character with ID {CharacterId} from universe with ID {UniverseId}", characterId, universeId);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while removing character from universe.");
+                return false;
+            }
+        }
+
+        public async Task<bool> AddBookToUniverse(string universeId, string bookId)
+        {
+            try
+            {
+                _logger.LogInformation("Adding book with ID {bookId} to universe with ID {UniverseId}", bookId, universeId);
+
+                var filter = Builders<BsonDocument>.Filter.Eq("_id", new ObjectId(universeId));
+                var update = Builders<BsonDocument>.Update.Push("books", new BsonDocument("book_id", new ObjectId(bookId)));
+
+                var result = await _collection.UpdateOneAsync(filter, update);
+
+                if (result.ModifiedCount == 0)
+                {
+                    _logger.LogWarning("No universe found with ID: {UniverseId}", universeId);
+                    return false;
+                }
+
+                _logger.LogInformation("Successfully added book with ID {BookId} to universe with ID {UniverseId}", bookId, universeId);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while adding character to universe.");
+                return false;
+            }
+        }
+
+        public async Task<bool> RemoveBookFromUniverse(string universeId, string bookId)
+        {
+            try
+            {
+                _logger.LogInformation("Removing character with ID {CharacterId} from universe with ID {UniverseId}", bookId, universeId);
+
+                var filter = Builders<BsonDocument>.Filter.Eq("_id", new ObjectId(universeId));
+                var update = Builders<BsonDocument>.Update.Pull("books", new BsonDocument("book_id", new ObjectId(bookId)));
+
+                var result = await _collection.UpdateOneAsync(filter, update);
+
+                if (result.ModifiedCount == 0)
+                {
+                    _logger.LogWarning("No universe found with ID: {UniverseId}", universeId);
+                    return false;
+                }
+
+                _logger.LogInformation("Successfully removed character with ID {BookId} from universe with ID {UniverseId}", bookId, universeId);
                 return true;
             }
             catch (Exception ex)
